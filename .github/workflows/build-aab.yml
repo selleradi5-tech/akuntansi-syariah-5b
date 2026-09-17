@@ -25,15 +25,20 @@ jobs:
 
       - name: Install Android SDK packages
         run: |
+          yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Configure Android project
-        shell: bash
+      - name: Extract Android project
         run: |
           set -e
+          test -f AkuntansiSyariah5B_CloudBuild.zip
+          unzip -q -o AkuntansiSyariah5B_CloudBuild.zip
           test -f settings.gradle.kts
           test -d app
 
+      - name: Configure Android project
+        run: |
+          set -e
           cat > settings.gradle.kts <<'EOF'
           import org.gradle.api.initialization.resolve.RepositoriesMode
 
