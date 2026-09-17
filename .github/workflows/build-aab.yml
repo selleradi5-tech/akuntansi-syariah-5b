@@ -20,6 +20,8 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
+        with:
+          packages: platform-tools
 
       - name: Install Android SDK packages
         run: |
@@ -41,31 +43,20 @@ jobs:
           cat > settings.gradle.kts <<'EOF'
           import org.gradle.api.initialization.resolve.RepositoriesMode
           pluginManagement {
-              repositories {
-                  google()
-                  mavenCentral()
-                  gradlePluginPortal()
-              }
+              repositories { google(); mavenCentral(); gradlePluginPortal() }
           }
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
-              repositories {
-                  google()
-                  mavenCentral()
-              }
+              repositories { google(); mavenCentral() }
           }
           rootProject.name = "AkuntansiSyariah5B"
           include(":app")
           EOF
           cat > build.gradle.kts <<'EOF'
-          plugins {
-              id("com.android.application") version "8.13.0" apply false
-          }
+          plugins { id("com.android.application") version "8.13.0" apply false }
           EOF
           cat > app/build.gradle.kts <<'EOF'
-          plugins {
-              id("com.android.application")
-          }
+          plugins { id("com.android.application") }
           android {
               namespace = "com.akuntansisyariah.aks5b"
               compileSdk = 36
@@ -81,8 +72,7 @@ jobs:
                   targetCompatibility = JavaVersion.VERSION_17
               }
           }
-          dependencies {
-          }
+          dependencies { }
           EOF
           find app/src -type f \( -name '*.kt' -o -name '*.kts' \) -delete || true
           mkdir -p app/src/main/java/com/akuntansisyariah/aks5b
@@ -95,53 +85,26 @@ jobs:
           public class MainActivity extends Activity {
               private WebView webView;
               private static final String URL = "https://akuntansi-syariah-5b.hatchable.site/";
-              @Override
-              protected void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-                  webView = new WebView(this);
-                  setContentView(webView);
-                  webView.getSettings().setJavaScriptEnabled(true);
-                  webView.getSettings().setDomStorageEnabled(true);
-                  webView.setWebViewClient(new WebViewClient());
-                  webView.loadUrl(URL);
+              @Override protected void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState); webView = new WebView(this); setContentView(webView);
+                  webView.getSettings().setJavaScriptEnabled(true); webView.getSettings().setDomStorageEnabled(true);
+                  webView.setWebViewClient(new WebViewClient()); webView.loadUrl(URL);
               }
-              @Override
-              public void onBackPressed() {
-                  if (webView != null && webView.canGoBack()) {
-                      webView.goBack();
-                  } else {
-                      super.onBackPressed();
-                  }
+              @Override public void onBackPressed() {
+                  if (webView != null && webView.canGoBack()) webView.goBack(); else super.onBackPressed();
               }
           }
           EOF
           mkdir -p app/src/main/res/values
           cat > app/src/main/res/values/styles.xml <<'EOF'
-          <resources>
-              <style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar">
-                  <item name="android:fontFamily">sans</item>
-                  <item name="android:colorAccent">#1B5E20</item>
-                  <item name="android:windowLightStatusBar">true</item>
-                  <item name="android:statusBarColor">#FFFFFF</item>
-              </style>
-          </resources>
+          <resources><style name="AppTheme" parent="android:style/Theme.Material.Light.NoActionBar"><item name="android:fontFamily">sans</item><item name="android:colorAccent">#1B5E20</item><item name="android:windowLightStatusBar">true</item><item name="android:statusBarColor">#FFFFFF</item></style></resources>
           EOF
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
-              <application
-                  android:allowBackup="false"
-                  android:label="Akuntansi Syariah 5B"
-                  android:theme="@style/AppTheme"
-                  android:usesCleartextTraffic="false">
-                  <activity
-                      android:name=".MainActivity"
-                      android:exported="true"
-                      android:screenOrientation="portrait">
-                      <intent-filter>
-                          <action android:name="android.intent.action.MAIN" />
-                          <category android:name="android.intent.category.LAUNCHER" />
-                      </intent-filter>
+              <application android:allowBackup="false" android:label="Akuntansi Syariah 5B" android:theme="@style/AppTheme" android:usesCleartextTraffic="false">
+                  <activity android:name=".MainActivity" android:exported="true" android:screenOrientation="portrait">
+                      <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
                   </activity>
               </application>
           </manifest>
@@ -162,8 +125,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           set -e
-          test -n "$KEYSTORE_BASE64"
-          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEYSTORE_BASE64"; test -n "$KEYSTORE_PASSWORD"
           CLEAN_BASE64="$(printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]')"
           REMAINDER=$(( ${#CLEAN_BASE64} % 4 ))
           if [ "$REMAINDER" -eq 2 ]; then CLEAN_BASE64="${CLEAN_BASE64}=="; fi
@@ -179,28 +141,20 @@ jobs:
         run: |
           set -e
           AAB="app/build/outputs/bundle/release/app-release.aab"
-          test -f "$AAB"
-          test -n "$KEYSTORE_PASSWORD"
-          test -n "$KEY_PASSWORD"
-
+          test -f "$AAB"; test -n "$KEYSTORE_PASSWORD"; test -n "$KEY_PASSWORD"
           PRIVATE_ALIAS=""
           while IFS= read -r ALIAS; do
             [ -n "$ALIAS" ] || continue
             if keytool -list -v -alias "$ALIAS" -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | grep -q '^Entry type: PrivateKeyEntry$'; then
-              PRIVATE_ALIAS="$ALIAS"
-              break
+              PRIVATE_ALIAS="$ALIAS"; break
             fi
           done < <(keytool -list -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk 'NR > 6 && $0 !~ /^$/ {print $1}')
-
           if [ -z "$PRIVATE_ALIAS" ]; then
-            echo "No PrivateKeyEntry found in the supplied keystore."
+            echo "No PrivateKeyEntry found in supplied keystore."
             keytool -list -v -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" | grep -E 'Alias name:|Entry type:' || true
             exit 1
           fi
-
-          echo "Private-key entry detected."
           if ! jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" "$AAB" "$PRIVATE_ALIAS"; then
-            echo "KEY_PASSWORD did not unlock the private key; retrying with KEYSTORE_PASSWORD as key password."
             jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" "$AAB" "$PRIVATE_ALIAS"
           fi
           mv "$AAB" "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab"
