@@ -182,7 +182,11 @@ jobs:
         run: |
           set -e
           test -n "$KEYSTORE_BASE64"
-          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+          CLEAN_BASE64="$(printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]')"
+          REMAINDER=$(( ${#CLEAN_BASE64} % 4 ))
+          if [ "$REMAINDER" -eq 2 ]; then CLEAN_BASE64="${CLEAN_BASE64}=="; fi
+          if [ "$REMAINDER" -eq 3 ]; then CLEAN_BASE64="${CLEAN_BASE64}="; fi
+          printf '%s' "$CLEAN_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
           test -s "$RUNNER_TEMP/release-keystore.jks"
 
       - name: Sign release AAB
