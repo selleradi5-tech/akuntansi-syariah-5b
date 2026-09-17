@@ -25,6 +25,7 @@ jobs:
 
       - name: Install Android SDK packages
         run: |
+          set -e
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
@@ -125,7 +126,8 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           set -e
-          test -n "$KEYSTORE_BASE64"; test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEYSTORE_BASE64"
+          test -n "$KEYSTORE_PASSWORD"
           CLEAN_BASE64="$(printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]')"
           REMAINDER=$(( ${#CLEAN_BASE64} % 4 ))
           if [ "$REMAINDER" -eq 2 ]; then CLEAN_BASE64="${CLEAN_BASE64}=="; fi
@@ -141,22 +143,28 @@ jobs:
         run: |
           set -e
           AAB="app/build/outputs/bundle/release/app-release.aab"
-          test -f "$AAB"; test -n "$KEYSTORE_PASSWORD"; test -n "$KEY_PASSWORD"
-          PRIVATE_ALIAS=""
-          while IFS= read -r ALIAS; do
-            [ -n "$ALIAS" ] || continue
-            if keytool -list -v -alias "$ALIAS" -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | grep -q '^Entry type: PrivateKeyEntry$'; then
-              PRIVATE_ALIAS="$ALIAS"; break
-            fi
-          done < <(keytool -list -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk 'NR > 6 && $0 !~ /^$/ {print $1}')
+          KEYSTORE="$RUNNER_TEMP/release-keystore.jks"
+          test -f "$AAB"
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_PASSWORD"
+
+          PRIVATE_ALIAS="$(keytool -list -v -keystore "$KEYSTORE" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk -F': ' '/^Alias name: / {print $2; exit}')"
           if [ -z "$PRIVATE_ALIAS" ]; then
-            echo "No PrivateKeyEntry found in supplied keystore."
-            keytool -list -v -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" | grep -E 'Alias name:|Entry type:' || true
+            echo "No alias found in supplied keystore."
             exit 1
           fi
-          if ! jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" "$AAB" "$PRIVATE_ALIAS"; then
-            jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" "$AAB" "$PRIVATE_ALIAS"
+          ENTRY_TYPE="$(keytool -list -v -alias "$PRIVATE_ALIAS" -keystore "$KEYSTORE" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk -F': ' '/^Entry type: / {print $2; exit}')"
+          if [ "$ENTRY_TYPE" != "PrivateKeyEntry" ]; then
+            echo "Detected alias is not a PrivateKeyEntry."
+            exit 1
           fi
+          echo "Private-key entry detected."
+
+          if ! jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEYSTORE" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" "$AAB" "$PRIVATE_ALIAS"; then
+            echo "KEY_PASSWORD did not unlock the private key; retrying with KEYSTORE_PASSWORD as key password."
+            jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$KEYSTORE" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" "$AAB" "$PRIVATE_ALIAS"
+          fi
+
           mv "$AAB" "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab"
           jarsigner -verify -verbose -certs "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab" >/dev/null
 
