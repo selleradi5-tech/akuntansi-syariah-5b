@@ -39,6 +39,9 @@ jobs:
       - name: Configure Android project
         run: |
           set -e
+          # Remove legacy AppCompat references from the extracted template.
+          find app/src/main/res -type f -name '*.xml' -print0 | xargs -0 sed -i 's/Theme\.AppCompat\.DayNight\.NoActionBar/android:style\/Theme.Material.Light.NoActionBar/g' || true
+
           cat > settings.gradle.kts <<'EOF'
           import org.gradle.api.initialization.resolve.RepositoriesMode
 
