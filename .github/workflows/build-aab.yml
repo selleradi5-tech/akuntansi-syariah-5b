@@ -11,59 +11,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Proyek Ekstrak
-        shell: bash
-        run: |
-          set -e
-
-          echo "=== Isi repository ==="
-          ls -lah
-
-          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
-
-          if [ -z "$ZIP_FILE" ]; then
-            echo "ERROR: File ZIP project tidak ditemukan."
-            exit 1
-          fi
-
-          echo "ZIP ditemukan: $ZIP_FILE"
-
-          rm -rf project
-          mkdir -p project
-
-          unzip -o "$ZIP_FILE" -d project
-
-          echo "=== Struktur project ==="
-          find project -maxdepth 3 -type f | head -100
-
-      - name: Install JDK 17
+      - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
 
-      - name: Pengaturan Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: ''
 
-      - name: Pengaturan Gradle
-        uses: gradle/actions/setup-gradle@v4
-
-      - name: Bangun AAB
-        working-directory: project
-        shell: bash
+      - name: Install Android SDK packages
         run: |
-          chmod +x ./gradlew
-          ./gradlew bundleRelease
+          yes | sdkmanager --licenses || true
+          sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Cari AAB
-        shell: bash
-        run: |
-          echo "=== File AAB ==="
-          find project -type f -name "*.aab" -print
+      - name: Make Gradle executable
+        run: chmod +x ./project/gradlew
 
-      - name: Unggah AAB
+      - name: Build AAB
+        working-directory: ./project
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: AkuntansiSyariah5B-AAB
-          path: project/**/build/outputs/bundle/**/*.aab
-          if-no-files-found: error
+          path: project/app/build/outputs/bundle/release/*.aab
