@@ -40,10 +40,8 @@ jobs:
         run: |
           set -e
           find app/src/main/res -type f -name '*.xml' -print0 | xargs -0 sed -i 's/Theme\.AppCompat\.DayNight\.NoActionBar/android:style\/Theme.Material.Light.NoActionBar/g' || true
-
           cat > settings.gradle.kts <<'EOF'
           import org.gradle.api.initialization.resolve.RepositoriesMode
-
           pluginManagement {
               repositories {
                   google()
@@ -51,7 +49,6 @@ jobs:
                   gradlePluginPortal()
               }
           }
-
           dependencyResolutionManagement {
               repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
               repositories {
@@ -59,26 +56,21 @@ jobs:
                   mavenCentral()
               }
           }
-
           rootProject.name = "AkuntansiSyariah5B"
           include(":app")
           EOF
-
           cat > build.gradle.kts <<'EOF'
           plugins {
               id("com.android.application") version "8.13.0" apply false
           }
           EOF
-
           cat > app/build.gradle.kts <<'EOF'
           plugins {
               id("com.android.application")
           }
-
           android {
               namespace = "com.akuntansisyariah.aks5b"
               compileSdk = 36
-
               defaultConfig {
                   applicationId = "com.akuntansisyariah.aks5b"
                   minSdk = 23
@@ -86,32 +78,25 @@ jobs:
                   versionCode = 1
                   versionName = "1.0.0"
               }
-
               compileOptions {
                   sourceCompatibility = JavaVersion.VERSION_17
                   targetCompatibility = JavaVersion.VERSION_17
               }
           }
-
           dependencies {
           }
           EOF
-
           find app/src -type f \( -name '*.kt' -o -name '*.kts' \) -delete || true
           mkdir -p app/src/main/java/com/akuntansisyariah/aks5b
-
           cat > app/src/main/java/com/akuntansisyariah/aks5b/MainActivity.java <<'EOF'
           package com.akuntansisyariah.aks5b;
-
           import android.app.Activity;
           import android.os.Bundle;
           import android.webkit.WebView;
           import android.webkit.WebViewClient;
-
           public class MainActivity extends Activity {
               private WebView webView;
               private static final String URL = "https://akuntansi-syariah-5b.hatchable.site/";
-
               @Override
               protected void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
@@ -122,7 +107,6 @@ jobs:
                   webView.setWebViewClient(new WebViewClient());
                   webView.loadUrl(URL);
               }
-
               @Override
               public void onBackPressed() {
                   if (webView != null && webView.canGoBack()) {
@@ -133,7 +117,6 @@ jobs:
               }
           }
           EOF
-
           mkdir -p app/src/main/res/values
           cat > app/src/main/res/values/styles.xml <<'EOF'
           <resources>
@@ -145,7 +128,6 @@ jobs:
               </style>
           </resources>
           EOF
-
           cat > app/src/main/AndroidManifest.xml <<'EOF'
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
@@ -188,6 +170,10 @@ jobs:
           if [ "$REMAINDER" -eq 3 ]; then CLEAN_BASE64="${CLEAN_BASE64}="; fi
           printf '%s' "$CLEAN_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
           test -s "$RUNNER_TEMP/release-keystore.jks"
+          keytool -list -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" >/dev/null
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
 
       - name: Sign release AAB
         env:
@@ -199,13 +185,18 @@ jobs:
           AAB="app/build/outputs/bundle/release/app-release.aab"
           test -f "$AAB"
           test -n "$KEYSTORE_PASSWORD"
-          test -n "$KEY_ALIAS"
           test -n "$KEY_PASSWORD"
+          PRIVATE_ALIAS="$(keytool -list -v -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk '/Alias name:/{a=$0} /Entry type: PrivateKeyEntry/{print a; exit}' | sed 's/^Alias name: //')"
+          if [ -z "$PRIVATE_ALIAS" ]; then
+            echo "No PrivateKeyEntry found in the supplied keystore."
+            exit 1
+          fi
+          echo "Using private-key alias detected in keystore."
           jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
             -keystore "$RUNNER_TEMP/release-keystore.jks" \
             -storepass "$KEYSTORE_PASSWORD" \
             -keypass "$KEY_PASSWORD" \
-            "$AAB" "$KEY_ALIAS"
+            "$AAB" "$PRIVATE_ALIAS"
           mv "$AAB" "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab"
           jarsigner -verify -verbose -certs "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab" >/dev/null
 
