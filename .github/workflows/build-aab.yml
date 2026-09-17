@@ -20,9 +20,7 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
-        with:
-          packages: ''
-
+          
       - name: Install Android SDK packages
         run: |
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
@@ -186,16 +184,12 @@ jobs:
           test -n "$KEYSTORE_PASSWORD"
           test -n "$KEY_PASSWORD"
           PRIVATE_ALIAS="$(keytool -list -v -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk '/Alias name:/{a=$0} /Entry type: PrivateKeyEntry/{print a; exit}' | sed 's/^Alias name: //')"
-          if [ -z "$PRIVATE_ALIAS" ]; then
-            echo "No PrivateKeyEntry found in the supplied keystore."
-            exit 1
+          test -n "$PRIVATE_ALIAS"
+          echo "Private-key entry detected."
+          if ! jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" "$AAB" "$PRIVATE_ALIAS"; then
+            echo "KEY_PASSWORD did not unlock the private key; retrying with KEYSTORE_PASSWORD as key password."
+            jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" "$AAB" "$PRIVATE_ALIAS"
           fi
-          echo "Using private-key alias detected in keystore."
-          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
-            -keystore "$RUNNER_TEMP/release-keystore.jks" \
-            -storepass "$KEYSTORE_PASSWORD" \
-            -keypass "$KEY_PASSWORD" \
-            "$AAB" "$PRIVATE_ALIAS"
           mv "$AAB" "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab"
           jarsigner -verify -verbose -certs "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab" >/dev/null
 
