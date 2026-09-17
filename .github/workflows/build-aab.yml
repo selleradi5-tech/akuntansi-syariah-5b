@@ -20,7 +20,7 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v4
-          
+
       - name: Install Android SDK packages
         run: |
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
@@ -175,7 +175,6 @@ jobs:
       - name: Sign release AAB
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
           set -e
@@ -183,8 +182,22 @@ jobs:
           test -f "$AAB"
           test -n "$KEYSTORE_PASSWORD"
           test -n "$KEY_PASSWORD"
-          PRIVATE_ALIAS="$(keytool -list -v -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk '/Alias name:/{a=$0} /Entry type: PrivateKeyEntry/{print a; exit}' | sed 's/^Alias name: //')"
-          test -n "$PRIVATE_ALIAS"
+
+          PRIVATE_ALIAS=""
+          while IFS= read -r ALIAS; do
+            [ -n "$ALIAS" ] || continue
+            if keytool -list -v -alias "$ALIAS" -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | grep -q '^Entry type: PrivateKeyEntry$'; then
+              PRIVATE_ALIAS="$ALIAS"
+              break
+            fi
+          done < <(keytool -list -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" 2>/dev/null | awk 'NR > 6 && $0 !~ /^$/ {print $1}')
+
+          if [ -z "$PRIVATE_ALIAS" ]; then
+            echo "No PrivateKeyEntry found in the supplied keystore."
+            keytool -list -v -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" | grep -E 'Alias name:|Entry type:' || true
+            exit 1
+          fi
+
           echo "Private-key entry detected."
           if ! jarsigner -sigalg SHA256withRSA -digestalg SHA-256 -keystore "$RUNNER_TEMP/release-keystore.jks" -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" "$AAB" "$PRIVATE_ALIAS"; then
             echo "KEY_PASSWORD did not unlock the private key; retrying with KEYSTORE_PASSWORD as key password."
