@@ -5,146 +5,87 @@ on:
 
 jobs:
   build:
-    name: Build Android AAB
+    name: Build Akuntansi Syariah 5B
     runs-on: ubuntu-latest
 
     steps:
 
-      # =========================
-      # 1. Ambil isi repository
-      # =========================
+      # 1. Ambil repository
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v4
 
-      # =========================
-      # 2. Install Java 17
-      # =========================
+      # 2. JDK 17
       - name: Instal JDK 17
-        uses: actions/setup-java@v6
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      # =========================
-      # 3. Setup Android SDK
-      # =========================
+      # 3. Android SDK
       - name: Pengaturan Android SDK
         uses: android-actions/setup-android@v4
         with:
           packages: ''
 
-      # =========================
-      # 4. Install SDK yang dibutuhkan
-      # =========================
+      # 4. Install Android SDK yang dibutuhkan
       - name: Instal paket Android SDK
         run: |
           yes | sdkmanager --licenses || true
+
           sdkmanager \
             "platform-tools" \
             "platforms;android-36" \
             "build-tools;36.0.0"
 
-      # =========================
-      # 5. Cari Gradle Wrapper
-      # =========================
-      - name: Cari project Android
-        shell: bash
+      # 5. Pastikan project Android ditemukan
+      - name: Periksa project Android
         run: |
-          echo "======================================"
-          echo "Mencari file Gradle Wrapper..."
-          echo "======================================"
+          echo "Isi folder android_project:"
+          find android_project -maxdepth 3 -type f | sort
 
-          find . -type f -name "gradlew" -print
+          echo ""
+          echo "Memeriksa file Gradle..."
 
-          GRADLEW=$(find . -type f -name "gradlew" | head -n 1)
+          test -f android_project/settings.gradle.kts
+          test -f android_project/build.gradle.kts
+          test -f android_project/app/build.gradle.kts
 
-          if [ -z "$GRADLEW" ]; then
-            echo ""
-            echo "gradlew belum ditemukan."
-            echo "Mencari file ZIP project Android..."
+          echo "Project Android ditemukan."
 
-            ZIP=$(find . -type f \( -name "*.zip" -o -name "*.ZIP" \) | head -n 1)
+      # 6. Download Gradle
+      - name: Instal Gradle 8.13
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.13-bin.zip
+          unzip -q gradle-8.13-bin.zip
 
-            if [ -n "$ZIP" ]; then
-              echo "ZIP ditemukan: $ZIP"
-              mkdir -p android_project
-              unzip -q "$ZIP" -d android_project
+          echo "$PWD/gradle-8.13/bin" >> "$GITHUB_PATH"
 
-              echo ""
-              echo "Mencari gradlew setelah ekstraksi:"
-              find android_project -type f -name "gradlew" -print
+          gradle --version
 
-              GRADLEW=$(find android_project -type f -name "gradlew" | head -n 1)
-            fi
-          fi
+      # 7. Build Android App Bundle
+      - name: Bangun AAB
+        working-directory: android_project
+        run: |
+          gradle bundleRelease --no-daemon --stacktrace
 
-          if [ -z "$GRADLEW" ]; then
-            echo ""
-            echo "======================================"
-            echo "ERROR: gradlew tidak ditemukan."
-            echo "======================================"
-            echo ""
-            echo "Isi repository:"
-            find . -maxdepth 4 -type f | sort | head -n 300
+      # 8. Periksa hasil AAB
+      - name: Periksa hasil AAB
+        run: |
+          echo "Mencari file AAB..."
+
+          find android_project -type f -name "*.aab" -print
+
+          if ! find android_project -type f -name "*.aab" | grep -q ".aab"; then
+            echo "ERROR: File AAB tidak berhasil dibuat."
             exit 1
           fi
 
-          PROJECT_DIR=$(dirname "$GRADLEW")
+          echo "AAB berhasil dibuat."
 
-          echo ""
-          echo "======================================"
-          echo "Gradle ditemukan!"
-          echo "GRADLEW: $GRADLEW"
-          echo "PROJECT: $PROJECT_DIR"
-          echo "======================================"
-
-          echo "GRADLEW=$GRADLEW" >> "$GITHUB_ENV"
-          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
-
-      # =========================
-      # 6. Jadikan Gradle executable
-      # =========================
-      - name: Jadikan Gradle dapat dieksekusi
-        run: |
-          echo "Menggunakan:"
-          echo "$GRADLEW"
-
-          chmod +x "$GRADLEW"
-
-          "$GRADLEW" --version
-
-      # =========================
-      # 7. Build AAB
-      # =========================
-      - name: Bangun AAB
-        shell: bash
-        run: |
-          cd "$PROJECT_DIR"
-
-          echo "======================================"
-          echo "Membangun Android App Bundle..."
-          echo "======================================"
-
-          ./gradlew bundleRelease --no-daemon --stacktrace
-
-      # =========================
-      # 8. Cari hasil AAB
-      # =========================
-      - name: Cari hasil AAB
-        run: |
-          echo "======================================"
-          echo "Mencari file AAB..."
-          echo "======================================"
-
-          find . -type f -name "*.aab" -print
-
-      # =========================
       # 9. Upload AAB
-      # =========================
       - name: Unggah AAB
         uses: actions/upload-artifact@v4
         with:
           name: AkuntansiSyariah5B-AAB
-          path: |
-            **/*.aab
+          path: android_project/app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
