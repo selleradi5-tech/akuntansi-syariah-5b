@@ -39,7 +39,6 @@ jobs:
       - name: Configure Android project
         run: |
           set -e
-          # Remove legacy AppCompat references from the extracted template.
           find app/src/main/res -type f -name '*.xml' -print0 | xargs -0 sed -i 's/Theme\.AppCompat\.DayNight\.NoActionBar/android:style\/Theme.Material.Light.NoActionBar/g' || true
 
           cat > settings.gradle.kts <<'EOF'
@@ -177,9 +176,38 @@ jobs:
       - name: Build release AAB
         run: gradle bundleRelease --no-daemon --stacktrace
 
-      - name: Upload AAB
+      - name: Prepare signing keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          set -e
+          test -n "$KEYSTORE_BASE64"
+          printf '%s' "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
+          test -s "$RUNNER_TEMP/release-keystore.jks"
+
+      - name: Sign release AAB
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -e
+          AAB="app/build/outputs/bundle/release/app-release.aab"
+          test -f "$AAB"
+          test -n "$KEYSTORE_PASSWORD"
+          test -n "$KEY_ALIAS"
+          test -n "$KEY_PASSWORD"
+          jarsigner -verbose -sigalg SHA256withRSA -digestalg SHA-256 \
+            -keystore "$RUNNER_TEMP/release-keystore.jks" \
+            -storepass "$KEYSTORE_PASSWORD" \
+            -keypass "$KEY_PASSWORD" \
+            "$AAB" "$KEY_ALIAS"
+          mv "$AAB" "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab"
+          jarsigner -verify -verbose -certs "app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab" >/dev/null
+
+      - name: Upload signed AAB
         uses: actions/upload-artifact@v4
         with:
-          name: AkuntansiSyariah5B-AAB
-          path: app/build/outputs/bundle/release/*.aab
+          name: AkuntansiSyariah5B-release-AAB
+          path: app/build/outputs/bundle/release/AkuntansiSyariah5B-release.aab
           if-no-files-found: error
