@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V17</title>
+<title>Open City V18</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -15,7 +15,7 @@ canvas{display:block;width:100vw;height:100vh}
 .panel h1{margin:0 0 8px;font-size:31px}.panel p{color:#cbd5dc;line-height:1.5}
 .play{width:100%;height:58px;border:0;border-radius:15px;background:#29aa68;color:#fff;font-size:18px;font-weight:bold}
 .btn{position:fixed;z-index:8;width:76px;height:54px;border:1px solid #fff4;border-radius:15px;background:#071018dd;color:#fff;font-weight:bold;box-shadow:0 5px 15px #0005}
-.a{right:14px;bottom:88px}.b{right:98px;bottom:18px}
+.a{right:14px;bottom:88px}.b{right:98px;bottom:18px}.nitro{right:14px;bottom:18px;width:76px;height:48px;background:#b24a24dd}
 .joy{position:fixed;z-index:8;left:14px;bottom:16px;width:142px;height:142px;border:2px solid #fff3;border-radius:50%;background:#ffffff0b}
 .stick{position:absolute;left:40px;top:40px;width:58px;height:58px;border-radius:50%;background:#ffffff38}
 #mini{position:fixed;right:9px;top:72px;width:112px;height:112px;z-index:6;border:2px solid #ffffff66;border-radius:12px;background:#142019dd}
@@ -25,17 +25,18 @@ canvas{display:block;width:100vw;height:100vh}
 <body>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V17</b><br>
+<div id="hud">🌆 <b>OPEN CITY V18</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
-<span id="status">⛽ 100% &nbsp; 🕐 08:00</span></div>
+<span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
 <div class="joy" id="joy"><div class="stick" id="stick"></div></div>
 <button class="btn a" id="act">AKSI</button>
 <button class="btn b" id="carBtn">MOBIL</button>
+<button class="btn nitro" id="nitroBtn">⚡ NITRO</button>
 <div id="hint"></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
-<p><b>V17 CITY OVERHAUL</b><br>City lebih hidup, gedung detail, trotoar, taman, lampu jalan, kendaraan, polisi, minimap, SPBU, toko, safehouse, misi dan siang-malam.</p>
+<p><b>V18 STREET LIFE UPDATE</b><br>City lebih hidup dengan pickup uang, variasi misi, tabrakan traffic, nitro, wanted system, polisi patroli, SPBU, toko, safehouse, minimap dan siang-malam.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 
@@ -56,8 +57,9 @@ const fuelStation={x:360,y:0};
 const shop={x:-360,y:0};
 const home={x:0,y:360};
 let started=false,inCar=false,money=1000,hp=100,wanted=0,fuel=100,clock=8;
-let joyX=0,joyY=0,pointerId=null,last=0,missionCount=0;
-const traffic=[],npcs=[],police=[],trees=[],lamps=[];
+let joyX=0,joyY=0,pointerId=null,last=0,missionCount=0,nitro=100,nitroOn=false,score=0;
+const traffic=[],npcs=[],police=[],trees=[],lamps=[],cashDrops=[];
+
 const roadW=92,grid=360,world=1800;
 
 function randish(i,a,b){return a+((Math.sin(i*12.9898)*43758.5453)%1+.5)*(b-a)}
@@ -83,6 +85,9 @@ for(let i=0;i<38;i++){
   const gx=Math.round(((i*97)%3000-1500)/grid)*grid;
   const gy=Math.round(((i*53)%3000-1500)/grid)*grid;
   lamps.push({x:gx+roadW/2+13,y:gy+roadW/2+13});
+}
+for(let i=0;i<16;i++){
+  cashDrops.push({x:((i*337)%2600)-1300,y:((i*521)%2600)-1300,got:false});
 }
 
 function roadX(x){return Math.abs((x%grid+grid)%grid)<roadW/2 || Math.abs(((x%grid+grid)%grid)-grid)<roadW/2}
@@ -133,9 +138,10 @@ function toggleCar(){
 }
 
 function completeMission(){
-  missionCount++;money+=300;wanted=clamp(wanted+1,0,5);
+  missionCount++;money+=300;score+=300;wanted=clamp(wanted+1,0,5);
   if(missionCount%2===0){target.x=Math.round((((missionCount*613)%2800)-1400)/grid)*grid;target.y=clamp(((missionCount*827)%2800)-1400,-world+100,world-100)}else{target.x=clamp(((missionCount*613)%2800)-1400,-world+100,world-100);target.y=Math.round((((missionCount*827)%2800)-1400)/grid)*grid}
-  setMission("Misi "+missionCount+" selesai! +$300. Tujuan berikutnya.");
+  const kinds=["Antar paket","Kejar checkpoint","Kunjungi lokasi","Jelajahi distrik"];
+  setMission(kinds[missionCount%kinds.length]+" selesai! +$300. Tujuan berikutnya.");
   police.length=0;
   for(let i=0;i<wanted;i++)police.push({x:target.x+220+i*55,y:target.y-220-i*35});
   showHint("MISI SELESAI  +$300");
@@ -157,6 +163,9 @@ function action(){
 }
 document.getElementById("act").onclick=action;
 document.getElementById("carBtn").onclick=toggleCar;
+document.getElementById("nitroBtn").onpointerdown=()=>{if(started&&inCar&&nitro>1)nitroOn=true};
+document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
+document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").onclick=()=>{
   started=true;document.getElementById("start").style.display="none";
   last=performance.now();showHint("Cari titik kuning untuk memulai misi");
@@ -231,6 +240,14 @@ function drawPOI(obj,color,label,cx,cy,shape){
   ctx.restore();
 }
 
+function drawCash(cx,cy){
+  for(const d of cashDrops){
+    if(d.got)continue;
+    const [sx,sy]=worldToScreen(d.x,d.y,cx,cy);
+    ctx.fillStyle="#35d27a";ctx.beginPath();ctx.arc(sx,sy,9,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#08261a";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("$",sx,sy+4);
+  }
+}
 function drawTraffic(cx,cy,dt){
   for(const v of traffic){
     v.x+=Math.cos(v.a)*v.s*dt;v.y+=Math.sin(v.a)*v.s*dt;
@@ -318,29 +335,44 @@ function draw(t,dt){
   drawPOI(fuelStation,"#39bf70","SPBU",ox,oy,"pump");
   drawPOI(shop,"#a855d8","TOKO",ox,oy,"shop");
   drawPOI(home,"#df6959","SAFEHOUSE",ox,oy,"home");
-  drawTraffic(ox,oy,dt);drawNPCs(ox,oy,t);drawTarget(ox,oy,t);drawPolice(ox,oy,dt,ox,oy);
+  drawCash(ox,oy);drawTraffic(ox,oy,dt);drawNPCs(ox,oy,t);drawTarget(ox,oy,t);drawPolice(ox,oy,dt,ox,oy);
   if(inCar){drawCar()}else{drawPlayer()}
   if(night){ctx.fillStyle="#09132a66";ctx.fillRect(0,0,W,H)}
   drawMini(ox,oy);
   document.getElementById("money").textContent=money;
   document.getElementById("hp").textContent=Math.floor(hp);
   document.getElementById("wanted").textContent="★".repeat(wanted)+"☆".repeat(5-wanted);
-  document.getElementById("status").textContent="⛽ "+Math.floor(fuel)+"%  •  🕐 "+String(Math.floor(clock)).padStart(2,"0")+":"+String(Math.floor((clock%1)*60)).padStart(2,"0");
+  const kmh=inCar?Math.round(car.speed*.72):0;
+  document.getElementById("status").textContent="⛽ "+Math.floor(fuel)+"%  •  🕐 "+String(Math.floor(clock)).padStart(2,"0")+":"+String(Math.floor((clock%1)*60)).padStart(2,"0")+"  •  🏎️ "+kmh+" km/h  •  ⚡ "+Math.floor(nitro)+"%";
 }
 
 function update(dt){
   clock=(clock+dt*.22)%24;
   const dx=joyX,dy=joyY;
+  if(wanted>0&&missionCount>0&&Math.random()<dt*.025){wanted=Math.max(0,wanted-1);if(wanted===0)police.length=0;}
+  for(const d of cashDrops){
+    if(!d.got&&dist(inCar?car.x:p.x,inCar?car.y:p.y,d.x,d.y)<28){
+      d.got=true;money+=100;score+=100;showHint("💵 CASH PICKUP +$100");
+    }
+  }
   if(inCar){
     if(Math.abs(dx)+Math.abs(dy)>.05&&fuel>0){
-      const targetSpeed=Math.hypot(dx,dy)*250;
+      const boost=nitroOn&&nitro>0?1.8:1;
+      const targetSpeed=Math.hypot(dx,dy)*250*boost;
       car.speed+=(targetSpeed-car.speed)*Math.min(1,dt*6);
+      if(nitroOn&&nitro>0)nitro=clamp(nitro-dt*22,0,100);else nitro=clamp(nitro+dt*3,0,100);
       if(Math.abs(dx)>Math.abs(dy))car.a=dx>0?0:Math.PI;else car.a=dy>0?Math.PI/2:-Math.PI/2;
       const ox=car.x,oy=car.y;
       moveEntity(car,Math.cos(car.a)*car.speed*dt,Math.sin(car.a)*car.speed*dt);
       if(car.x!==ox||car.y!==oy)fuel=clamp(fuel-Math.abs(car.speed)*dt*.006,0,100);
       else car.speed=0;
       p.x=car.x;p.y=car.y;
+      for(const v of traffic){
+        if(dist(car.x,car.y,v.x,v.y)<38){
+          car.speed*=-.25;hp=clamp(hp-3,0,100);wanted=clamp(wanted+1,0,5);
+          showHint("🚗 Tabrakan! Polisi mencari kamu");
+        }
+      }
     }else car.speed*=.9;
   }else{
     moveEntity(p,dx*175*dt,dy*175*dt);
