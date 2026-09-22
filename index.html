@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V4</title>
+<title>Open City V5 • Street Life</title>
 <style>
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#17221a;font-family:Arial;color:#fff;touch-action:none}
 canvas{display:block;width:100%;height:100%}
@@ -26,7 +26,7 @@ button{height:52px;border:1px solid #fff4;border-radius:14px;background:#071018d
 <body>
 <canvas id="game"></canvas><canvas id="map"></canvas>
 <div id="hud">
-<div class="p"><b>OPEN CITY</b> <small>V4</small><br>💵 $<b id="money">1000</b> &nbsp; ❤️ <span class="bar"><i id="hp" class="fill"></i></span> <span id="hpv">100</span>%</div>
+<div class="p"><b>OPEN CITY</b> <small>V5</small><br>💵 $<b id="money">1000</b> &nbsp; ❤️ <span class="bar"><i id="hp" class="fill"></i></span> <span id="hpv">100</span>%</div>
 <div class="p">⚡ <span class="bar"><i id="en" class="fill"></i></span> <span id="env">100</span>%</div>
 <div class="p">🚨 <span id="wanted">☆☆☆☆☆</span></div>
 <div class="p" id="mission">Misi 1</div>
@@ -36,12 +36,12 @@ button{height:52px;border:1px solid #fff4;border-radius:14px;background:#071018d
 <div id="buttons">
 <button id="car">🚗 MOBIL</button><button id="run">🏃 LARI</button>
 <button id="action">🎯 AKSI</button><button id="horn">📣 KLAKSON</button>
-<button id="save">💾 SIMPAN</button><button id="load">📂 LOAD</button>
+<button id="job">💼 JOB</button><button id="garage">🔧 UPGRADE</button><button id="save">💾 SIMPAN</button><button id="load">📂 LOAD</button>
 <button id="pause" class="wide">⏸️ PAUSE</button>
 </div>
 <div id="start"><div class="box">
-<h1>🌆 OPEN CITY</h1><b>VERSION 4 • MOBILE</b>
-<p>Kota besar, mobil, NPC, polisi, misi berantai, toko, bengkel, safe house, wanted level, uang dan save game.</p>
+<h1>🌆 OPEN CITY</h1><b>VERSION 5 • MOBILE</b>
+<p>Kota lebih hidup dengan pekerjaan sampingan, cuaca, bensin, kerusakan mobil, lampu lalu lintas, upgrade kendaraan, NPC, polisi dan misi.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 <script>
@@ -58,7 +58,7 @@ for(let bx=-WORLD+100;bx<WORLD;bx+=GRID)for(let by=-WORLD+100;by<WORLD;by+=GRID)
  for(let k=0;k<3;k++)trees.push({x:bx+rnd(0,180),y:by+rnd(0,180)})
 }
 const player={x:0,y:0,hp:100,en:100,a:0},car={x:70,y:0,a:0,s:0};
-let inCar=false,money=1000,wanted=0,mission=0,paused=false,started=false,clock=0,level=1,xp=0;
+let inCar=false,money=1000,wanted=0,mission=0,paused=false,started=false,clock=0,level=1,xp=0,fuel=100,damage=0,weather='CERAH',job=null,jobTime=0,carUpgrade=0,inventory=0;
 const missions=[{x:600,y:600,t:'Temui kurir di timur.'},{x:-600,y:300,t:'Antarkan paket ke gudang.'},{x:-600,y:-600,t:'Cari kendaraan target.'},{x:600,y:-600,t:'Kabur ke markas.'},{x:0,y:900,t:'Bantu bengkel menyelamatkan mobil.'},{x:900,y:0,t:'Ambil uang dari klien.'},{x:-900,y:0,t:'Temui kontak malam.'},{x:0,y:-900,t:'Kembali ke safe house.'}];
 const places=[{x:300,y:0,t:'shop',name:'TOKO',col:'#e9a72e'},{x:-300,y:0,t:'garage',name:'BENGKEL',col:'#4ba7e8'},{x:0,y:500,t:'safe',name:'RUMAH',col:'#58c978'}];
 const cars=[];const carColors=['#d94343','#e2b73d','#3e8fd0','#df6b2c','#b95bd0','#e7e7e7','#35a878'];
@@ -72,13 +72,43 @@ const key={u:0,d:0,l:0,r:0,run:0};addEventListener('keydown',e=>{let k=e.key.toL
 addEventListener('keyup',e=>{let k=e.key.toLowerCase();if(k==='w'||k==='arrowup')key.u=0;if(k==='s'||k==='arrowdown')key.d=0;if(k==='a'||k==='arrowleft')key.l=0;if(k==='d'||k==='arrowright')key.r=0;if(k==='shift')key.run=0});
 function on(id,down,up){const b=document.getElementById(id);b.onpointerdown=e=>{e.preventDefault();down()};if(up)b.onpointerup=up}
 on('run',()=>key.run=1,()=>key.run=0);on('car',toggleCar);on('action',action);on('horn',()=>say('📣 BEEP!'));on('pause',()=>paused=!paused);
-on('save',saveGame);on('load',loadGame);
+on('save',saveGame);on('load',loadGame);on('job',startJob);on('garage',upgradeCar);
 function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}function A(){return inCar?car:player}
 function clamp(o){o.x=Math.max(-WORLD+20,Math.min(WORLD-20,o.x));o.y=Math.max(-WORLD+20,Math.min(WORLD-20,o.y))}
 function say(t){const e=document.getElementById('msg');e.textContent=t;e.style.opacity=1;clearTimeout(say.t);say.t=setTimeout(()=>e.style.opacity=0,1300)}
 function toggleCar(){if(!started)return;if(inCar){inCar=false;player.x=car.x+45;player.y=car.y;say('Keluar mobil');return}let q=cars.find(v=>dist(player,v)<55);if(q){car.x=q.x;car.y=q.y;car.a=q.a;inCar=true;say('🚗 Mobil siap')}} 
 function spawnPolice(n){police=[];for(let i=0;i<n;i++){let a=rnd(0,6.28);police.push({x:A().x+Math.cos(a)*rnd(300,500),y:A().y+Math.sin(a)*rnd(300,500),a:0,s:rnd(90,125)})}}
-function finishMission(){let reward=300+mission*120+level*50;money+=reward;xp+=25;if(xp>=100){xp-=100;level++;money+=500;say('⭐ LEVEL '+level+'! +$500')}wanted=Math.min(5,mission>=2?2:1);if(wanted)spawnPolice(wanted+1);say('Misi selesai! +$'+reward);mission=(mission+1)%missions.length}
+function startJob(){if(job){say('💼 Job sedang berjalan');return}job={x:A().x+rnd(-600,600),y:A().y+rnd(-600,600)};jobTime=35;say('💼 Job baru! Cari titik biru')}\nfunction upgradeCar(){if(!inCar){say('Masuk mobil dulu');return}if(money<300){say('Uang kurang. Upgrade $300');return}money-=300;carUpgrade=Math.min(3,carUpgrade+1);say('🔧 Upgrade mobil LV '+carUpgrade)}\nfunction finishJob(){money+=450+carUpgrade*100;xp+=20;inventory++;job=null;jobTime=0;say('💼 Job selesai! +money+=reward;xp+=25;if(xp>=100){xp-=100;level++;money+=500;say('⭐ LEVEL '+level+'! +$500')}wanted=Math.min(5,mission>=2?2:1);if(wanted)spawnPolice(wanted+1);say('Misi selesai! +$'+reward);mission=(mission+1)%missions.length}
+function action(){let a=A();if(job&&dist(a,job)<90){finishJob();return}if(dist(a,missions[mission])<90){finishMission();return}for(const p of places)if(dist(a,p)<80){if(p.t==='shop'){money=Math.max(0,money-60);player.hp=Math.min(100,player.hp+35);say('🛒 Toko -$60')}else if(p.t==='garage'){if(money>=150){money-=150;player.hp=100;car.s=0;fuel=100;damage=0;say('🔧 Bengkel + bensin -$150')}else say('Uang kurang')}else if(p.t==='safe'){wanted=0;police=[];say('🏠 Safe house')}}}
+function move(dt){let dx=jx+key.r-key.l,dy=jy+key.d-key.u,L=Math.hypot(dx,dy);if(L>1){dx/=L;dy/=L}if(!dx&&!dy)return;if(inCar){car.a=Math.atan2(dy,dx);car.s+=(220-car.s)*.12;car.x+=dx*car.s*dt;car.y+=dy*car.s*dt;clamp(car);player.x=car.x;player.y=car.y}else{let v=key.run&&player.en>0?205:130;player.a=Math.atan2(dy,dx);player.x+=dx*v*dt;player.y+=dy*v*dt;clamp(player);if(key.run)player.en=Math.max(0,player.en-28*dt);else player.en=Math.min(100,player.en+18*dt)}}
+function ai(dt){for(const q of cars){q.x+=Math.cos(q.a)*q.s*dt;q.y+=Math.sin(q.a)*q.s*dt;if(q.x>WORLD)q.x=-WORLD;if(q.x<-WORLD)q.x=WORLD;if(q.y>WORLD)q.y=-WORLD;if(q.y<-WORLD)q.y=WORLD}
+for(const n of npcs){n.t-=dt;if(n.t<0){n.a+=rnd(-1,1);n.t=rnd(1,4)}n.x+=Math.cos(n.a)*n.s*dt;n.y+=Math.sin(n.a)*n.s*dt}
+for(const p of police){let a=A(),ang=Math.atan2(a.y-p.y,a.x-p.x);p.a=ang;p.x+=Math.cos(ang)*p.s*dt;p.y+=Math.sin(ang)*p.s*dt;if(dist(p,a)<40){player.hp-=18*dt;damage=Math.min(100,damage+10*dt)}}
+}
+function eventSpawn(){if(!event&&Math.random()<.002){let a=A();event={x:Math.max(-WORLD+100,Math.min(WORLD-100,a.x+rnd(-700,700))),y:Math.max(-WORLD+100,Math.min(WORLD-100,a.y+rnd(-700,700)))};eventTime=20;say('⚡ EVENT BARU! Pergi ke titik ungu')}} 
+function sx(v,cx){return v-cx+W/2}function sy(v,cy){return v-cy+H/2}
+function drawCar(q,cx,cy,pol){let X=sx(q.x,cx),Y=sy(q.y,cy);ctx.save();ctx.translate(X,Y);ctx.rotate(q.a);ctx.fillStyle='#0007';ctx.fillRect(-18,-29,36,58);ctx.fillStyle=pol?'#eee':q.col;ctx.fillRect(-16,-28,32,56);ctx.fillStyle=pol?'#244d7e':'#273a4b';ctx.fillRect(-13,-9,26,20);ctx.fillStyle='#111';ctx.fillRect(-20,-20,6,13);ctx.fillRect(14,-20,6,13);ctx.fillRect(-20,8,6,13);ctx.fillRect(14,8,6,13);if(pol){ctx.fillStyle='#f33';ctx.fillRect(-10,-27,8,5);ctx.fillStyle='#3aa7ff';ctx.fillRect(2,-27,8,5)}ctx.restore()}
+function draw(){let a=A(),cx=a.x,cy=a.y;ctx.fillStyle='#4f7b49';ctx.fillRect(0,0,W,H);
+for(const r of roads){ctx.fillStyle='#34383d';ctx.fillRect(sx(r.x,cx),sy(r.y,cy),r.w,r.h)}
+ctx.strokeStyle='#d8c34b';ctx.lineWidth=2;ctx.setLineDash([15,18]);for(let q=-WORLD;q<=WORLD;q+=GRID){ctx.beginPath();ctx.moveTo(sx(q,cx),0);ctx.lineTo(sx(q,cx),H);ctx.stroke();ctx.beginPath();ctx.moveTo(0,sy(q,cy));ctx.lineTo(W,sy(q,cy));ctx.stroke()}ctx.setLineDash([]);
+for(const b of buildings){let X=sx(b.x,cx),Y=sy(b.y,cy);if(X<-120||X>W+120||Y<-120||Y>H+120)continue;ctx.fillStyle='#172019';ctx.fillRect(X+6,Y+7,b.w,b.h);ctx.fillStyle=b.c;ctx.fillRect(X,Y,b.w,b.h);ctx.fillStyle='#fff3';for(let wx=X+8;wx<X+b.w-5;wx+=18)for(let wy=Y+8;wy<Y+b.h-5;wy+=18)ctx.fillRect(wx,wy,7,8)}
+for(const t of trees){let X=sx(t.x,cx),Y=sy(t.y,cy);if(X<-25||X>W+25||Y<-25||Y>H+25)continue;ctx.fillStyle='#2d6137';ctx.beginPath();ctx.arc(X,Y,13,0,Math.PI*2);ctx.fill()}
+for(const p of places){let X=sx(p.x,cx),Y=sy(p.y,cy);ctx.fillStyle=p.col;ctx.beginPath();ctx.arc(X,Y,22,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='16px Arial';ctx.textAlign='center';ctx.fillText(p.t==='shop'?'🛒':p.t==='garage'?'🔧':'🏠',X,Y+6)}
+const q=missions[mission];ctx.strokeStyle='#ffd329';ctx.lineWidth=3;ctx.beginPath();ctx.arc(sx(q.x,cx),sy(q.y,cy),24+Math.sin(clock*5)*5,0,Math.PI*2);ctx.stroke();
+if(event){ctx.strokeStyle='#d85cff';ctx.beginPath();ctx.arc(sx(event.x,cx),sy(event.y,cy),18,0,Math.PI*2);ctx.stroke()}\nif(job){ctx.strokeStyle='#55bfff';ctx.lineWidth=4;ctx.beginPath();ctx.arc(sx(job.x,cx),sy(job.y,cy),19,0,Math.PI*2);ctx.stroke()}
+for(const q of cars)drawCar(q,cx,cy,false);for(const n of npcs){let X=sx(n.x,cx),Y=sy(n.y,cy);if(X<-15||X>W+15||Y<-15||Y>H+15)continue;ctx.fillStyle='#d49a70';ctx.beginPath();ctx.arc(X,Y,6,0,Math.PI*2);ctx.fill();ctx.fillRect(X-6,Y+5,12,10)}
+for(const p of police)drawCar(p,cx,cy,true);if(inCar)drawCar(car,cx,cy,false);else{let X=sx(player.x,cx),Y=sy(player.y,cy);ctx.fillStyle='#3479dc';ctx.beginPath();ctx.arc(X,Y,10,0,Math.PI*2);ctx.fill();ctx.fillStyle='#d49a70';ctx.beginPath();ctx.arc(X,Y-11,6,0,Math.PI*2);ctx.fill()}
+let night=(Math.sin(clock*.18)+1)/2;ctx.fillStyle='rgba(4,10,27,'+(night*.35)+')';ctx.fillRect(0,0,W,H);if(weather==='HUJAN'){ctx.strokeStyle='#8ac7ff55';for(let i=0;i<90;i++){let rx=(i*83+clock*180)%W,ry=(i*47+clock*260)%H;ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-5,ry+14);ctx.stroke()}}else if(weather==='BERKABUT'){ctx.fillStyle='#cfd8dc22';ctx.fillRect(0,0,W,H)}}
+function mini(){const S=140;mx.clearRect(0,0,S,S);mx.fillStyle='#17221a';mx.fillRect(0,0,S,S);const sc=S/(WORLD*2),dot=(q,col,r)=>{mx.fillStyle=col;mx.beginPath();mx.arc(S/2+q.x*sc,S/2+q.y*sc,r,0,Math.PI*2);mx.fill()};for(const p of places)dot(p,p.col,3);dot(missions[mission],'#ffd329',4);if(event)dot(event,'#d85cff',4);for(const p of police)dot(p,'#e33',2);if(job)dot(job,'#55bfff',4);dot(A(),'#fff',4)}
+function ui(){document.getElementById('money').textContent=Math.floor(money);document.getElementById('hpv').textContent=Math.max(0,Math.floor(player.hp));document.getElementById('env').textContent=Math.floor(player.en);document.getElementById('hp').style.width=Math.max(0,player.hp)+'%';document.getElementById('en').style.width=player.en+'%';document.getElementById('wanted').textContent='★'.repeat(wanted)+'☆'.repeat(5-wanted);document.getElementById('mission').textContent='MISI '+(mission+1)+': '+missions[mission].t+(dist(A(),missions[mission])<90?' • TEKAN AKSI':'')+' • LV '+level+' XP '+xp+'/100 • ⛽ '+Math.floor(fuel)+'% • 🔧 '+Math.floor(damage)+'%'+(job?' • 💼 JOB '+Math.ceil(jobTime)+'s':'')}
+function saveGame(){localStorage.setItem('openCityV5',JSON.stringify({money,wanted,mission,level,xp,fuel,damage,carUpgrade,inventory,player:{x:player.x,y:player.y,hp:player.hp,en:player.en},car:{x:car.x,y:car.y}}));say('💾 GAME TERSIMPAN')}
+function loadGame(){try{let s=JSON.parse(localStorage.getItem('openCityV5'));if(!s)return say('Belum ada save');money=s.money;wanted=s.wanted;mission=s.mission;level=s.level;xp=s.xp;fuel=s.fuel??100;damage=s.damage??0;carUpgrade=s.carUpgrade??0;inventory=s.inventory??0;Object.assign(player,s.player);Object.assign(car,s.car);inCar=false;spawnPolice(wanted+1);say('📂 SAVE DIMUAT')}catch(e){say('Save rusak')}}
+let last=performance.now();function loop(t){requestAnimationFrame(loop);if(!started)return;let dt=Math.min(.04,(t-last)/1000);last=t;if(!paused){clock+=dt;move(dt);ai(dt);eventSpawn();if(event){eventTime-=dt;if(eventTime<=0)event=null}if(job){jobTime-=dt;if(jobTime<=0){job=null;say('💼 Job gagal')}}weather=(Math.sin(clock*.05)>0.55?'HUJAN':Math.sin(clock*.05)<-0.55?'BERKABUT':'CERAH');if(player.hp<=0){player.hp=100;money=Math.max(0,money-250);wanted=0;police=[];say('Kamu tumbang. -$250')}}draw();mini();ui();if(paused){ctx.fillStyle='#0009';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';ctx.font='bold 30px Arial';ctx.textAlign='center';ctx.fillText('PAUSE',W/2,H/2)}}
+document.getElementById('play').onclick=()=>{started=true;document.getElementById('start').style.display='none';say('V5 SIAP! Job dan upgrade siap dimainkan')};requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>+(450+carUpgrade*100))}\nfunction finishMission(){let reward=300+mission*120+level*50;money+=reward;xp+=25;if(xp>=100){xp-=100;level++;money+=500;say('⭐ LEVEL '+level+'! +$500')}wanted=Math.min(5,mission>=2?2:1);if(wanted)spawnPolice(wanted+1);say('Misi selesai! +$'+reward);mission=(mission+1)%missions.length}
 function action(){let a=A();if(dist(a,missions[mission])<90){finishMission();return}for(const p of places)if(dist(a,p)<80){if(p.t==='shop'){money=Math.max(0,money-60);player.hp=Math.min(100,player.hp+35);say('🛒 Toko -$60')}else if(p.t==='garage'){if(money>=150){money-=150;player.hp=100;car.s=0;say('🔧 Bengkel -$150')}else say('Uang kurang')}else if(p.t==='safe'){wanted=0;police=[];say('🏠 Safe house')}}}
 function move(dt){let dx=jx+key.r-key.l,dy=jy+key.d-key.u,L=Math.hypot(dx,dy);if(L>1){dx/=L;dy/=L}if(!dx&&!dy)return;if(inCar){car.a=Math.atan2(dy,dx);car.s+=(220-car.s)*.12;car.x+=dx*car.s*dt;car.y+=dy*car.s*dt;clamp(car);player.x=car.x;player.y=car.y}else{let v=key.run&&player.en>0?205:130;player.a=Math.atan2(dy,dx);player.x+=dx*v*dt;player.y+=dy*v*dt;clamp(player);if(key.run)player.en=Math.max(0,player.en-28*dt);else player.en=Math.min(100,player.en+18*dt)}}
 function ai(dt){for(const q of cars){q.x+=Math.cos(q.a)*q.s*dt;q.y+=Math.sin(q.a)*q.s*dt;if(q.x>WORLD)q.x=-WORLD;if(q.x<-WORLD)q.x=WORLD;if(q.y>WORLD)q.y=-WORLD;if(q.y<-WORLD)q.y=WORLD}
