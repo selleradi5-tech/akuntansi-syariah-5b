@@ -52,9 +52,9 @@ const p={x:0,y:0};
 const car={x:80,y:0,a:0,speed:0};
 const player={x:0,y:0};
 const target={x:600,y:600};
-const fuelStation={x:300,y:80};
-const shop={x:-220,y:-220};
-const home={x:-520,y:220};
+const fuelStation={x:360,y:0};
+const shop={x:-360,y:0};
+const home={x:0,y:360};
 let started=false,inCar=false,money=1000,hp=100,wanted=0,fuel=100,clock=8;
 let joyX=0,joyY=0,pointerId=null,last=0,missionCount=0;
 const traffic=[],npcs=[],police=[],trees=[],lamps=[];
@@ -134,8 +134,7 @@ function toggleCar(){
 
 function completeMission(){
   missionCount++;money+=300;wanted=clamp(wanted+1,0,5);
-  target.x=clamp(((missionCount*613)%2800)-1400,-world+100,world-100);
-  target.y=clamp(((missionCount*827)%2800)-1400,-world+100,world-100);
+  if(missionCount%2===0){target.x=Math.round((((missionCount*613)%2800)-1400)/grid)*grid;target.y=clamp(((missionCount*827)%2800)-1400,-world+100,world-100)}else{target.x=clamp(((missionCount*613)%2800)-1400,-world+100,world-100);target.y=Math.round((((missionCount*827)%2800)-1400)/grid)*grid}
   setMission("Misi "+missionCount+" selesai! +$300. Tujuan berikutnya.");
   police.length=0;
   for(let i=0;i<wanted;i++)police.push({x:target.x+220+i*55,y:target.y-220-i*35});
@@ -184,7 +183,7 @@ function drawRoads(cx,cy){
 
 function drawBuilding(bx,by,i,cx,cy){
   const [sx,sy]=worldToScreen(bx,by,cx,cy);
-  const bw=286,bh=248;
+  const bw=grid-roadW-30,bh=grid-roadW-30;
   if(sx+bw<0||sx>W||sy+bh<0||sy>H)return;
   ctx.fillStyle="#0003";ctx.fillRect(sx+8,sy+10,bw,bh);
   ctx.fillStyle=i%3===0?"#68747a":i%3===1?"#59676c":"#737d80";
@@ -204,7 +203,7 @@ function drawBuilding(bx,by,i,cx,cy){
 function drawCity(cx,cy){
   let i=0;
   for(let gx=-world;gx<world;gx+=grid)for(let gy=-world;gy<world;gy+=grid){
-    drawBuilding(gx-grid/2+37,gy-grid/2+55,i++,cx,cy);
+    drawBuilding(gx+roadW/2+15,gy+roadW/2+15,i++,cx,cy);
   }
   for(const t of trees){
     const [sx,sy]=worldToScreen(t.x,t.y,cx,cy);
