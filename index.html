@@ -134,7 +134,7 @@ function toggleCar(){
   if(inCar){
     inCar=false;p.x=car.x+Math.cos(car.a)*42;p.y=car.y+Math.sin(car.a)*42;
     showHint("Kamu keluar dari mobil");
-  }else if(dist(p.x,p.y,car.x,car.y)<78){
+  }else if(dist(p.x,p.y,car.x,car.y)<115){
     inCar=true;p.x=car.x;p.y=car.y;showHint("Mobil siap dikendarai");
   }else showHint("Dekati mobil dulu");
 }
