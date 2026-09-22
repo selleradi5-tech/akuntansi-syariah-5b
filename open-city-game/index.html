@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Open City Mobile</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#18251b;font-family:Arial,sans-serif;touch-action:none}
+canvas{display:block;width:100%;height:100%;background:#4d7a45}
+#hud{position:fixed;top:12px;left:12px;right:12px;z-index:3;color:white;text-shadow:0 2px 3px #000;pointer-events:none}
+.card{display:inline-block;background:#000b;border:1px solid #ffffff33;border-radius:12px;padding:9px 12px;margin-bottom:7px}
+#mission{display:block;max-width:360px}
+#wanted{color:#ffd43b;font-size:20px;letter-spacing:2px}
+#msg{position:fixed;top:46%;left:50%;transform:translate(-50%,-50%);z-index:5;color:#fff;font-size:24px;font-weight:bold;text-align:center;text-shadow:0 3px 8px #000;opacity:0;transition:.2s;pointer-events:none}
+#touch{position:fixed;inset:0;z-index:4;pointer-events:none}
+.btn{pointer-events:auto;width:62px;height:62px;border-radius:16px;border:1px solid #fff5;background:#0009;color:#fff;font-size:24px;font-weight:bold;-webkit-tap-highlight-color:transparent}
+#dpad{position:absolute;left:18px;bottom:24px;width:190px;height:150px}
+#dpad .up{position:absolute;left:64px;top:0}.left{position:absolute;left:0;top:64px}.down{position:absolute;left:64px;top:64px}.right{position:absolute;left:128px;top:64px}
+#actions{position:absolute;right:18px;bottom:28px;display:flex;gap:10px;align-items:end}
+#actions .btn{width:72px;height:62px;font-size:17px}
+#tip{position:fixed;bottom:4px;left:50%;transform:translateX(-50%);color:#fff9;font-size:11px;z-index:3;white-space:nowrap}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="hud">
+ <div class="card"><b>OPEN CITY</b><br>💵 $<span id="cash">250</span> &nbsp; ❤️ <span id="hp">100</span></div>
+ <div class="card">Wanted: <span id="wanted">☆☆☆☆☆</span></div>
+ <div class="card" id="mission">Misi: Pergi ke titik kuning.</div>
+</div>
+<div id="msg"></div>
+<div id="touch">
+ <div id="dpad">
+  <button class="btn up" data-k="up">▲</button><button class="btn left" data-k="left">◀</button>
+  <button class="btn down" data-k="down">▼</button><button class="btn right" data-k="right">▶</button>
+ </div>
+ <div id="actions"><button class="btn" data-k="e">🚗</button><button class="btn" data-k="run">RUN</button></div>
+</div>
+<div id="tip">🚗 dekat mobil untuk masuk/keluar • gunakan tombol arah untuk bergerak</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+let W,H,dpr,camX=0,camY=0;
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;c.width=W*dpr;c.height=H*dpr;c.style.width=W+'px';c.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',resize);resize();
+const keys={up:false,down:false,left:false,right:false,run:false};
+document.querySelectorAll('[data-k]').forEach(b=>{const k=b.dataset.k;if(k==='e'){b.addEventListener('pointerdown',e=>{e.preventDefault();toggleCar()});return}b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true;b.setPointerCapture(e.pointerId)});b.addEventListener('pointerup',e=>{e.preventDefault();keys[k]=false});b.addEventListener('pointercancel',()=>keys[k]=false)});
+addEventListener('keydown',e=>{let m={w:'up',s:'down',a:'left',d:'right',shift:'run'};if(m[e.key.toLowerCase()])keys[m[e.key.toLowerCase()]]=true;if(e.key.toLowerCase()==='e')toggleCar()});
+addEventListener('keyup',e=>{let m={w:'up',s:'down',a:'left',d:'right',shift:'run'};if(m[e.key.toLowerCase()])keys[m[e.key.toLowerCase()]]=false});
+let player={x:0,y:0,angle:0},car={x:115,y:25,angle:0},inCar=false;
+let cash=250,hp=100,wanted=0,mission=0,police=[],last=performance.now(),msgTimer=0;
+const roads=[];for(let x=-800;x<=800;x+=200) roads.push({x:x-28,y:-800,w:56,h:1600});for(let y=-800;y<=800;y+=200) roads.push({x:-800,y:y-28,w:1600,h:56});
+const buildings=[];for(let x=-700;x<=700;x+=100)for(let y=-700;y<=700;y+=100){if(Math.abs(x%200)<55||Math.abs(y%200)<55)continue;let h=35+Math.random()*80;buildings.push({x:x+10,y:y+10,w:70,h:70,hgt:h,col:['#788692','#a28d7c','#657782','#8a7568'][Math.floor(Math.random()*4)]})}
+const trees=[];for(let i=0;i<90;i++){let x=(Math.random()-.5)*1500,y=(Math.random()-.5)*1500;if(Math.abs((x+100)%200)<48||Math.abs((y+100)%200)<48)continue;trees.push({x,y})}
+let target={x:420,y:420};
+function sx(x){return x-camX+W/2}function sy(y){return y-camY+H/2}function rect(x,y,w,h,col){ctx.fillStyle=col;ctx.fillRect(sx(x),sy(y),w,h)}function circle(x,y,r,col){ctx.fillStyle=col;ctx.beginPath();ctx.arc(sx(x),sy(y),r,0,Math.PI*2);ctx.fill()}
+function drawWorld(){ctx.fillStyle='#527c4b';ctx.fillRect(0,0,W,H);for(const r of roads)rect(r.x,r.y,r.w,r.h,'#303438');ctx.strokeStyle='#d7c35c';ctx.lineWidth=3;ctx.setLineDash([16,18]);for(let x=-800;x<=800;x+=200){ctx.beginPath();ctx.moveTo(sx(x),0);ctx.lineTo(sx(x),H);ctx.stroke()}for(let y=-800;y<=800;y+=200){ctx.beginPath();ctx.moveTo(0,sy(y));ctx.lineTo(W,sy(y));ctx.stroke()}ctx.setLineDash([]);for(const b of buildings){rect(b.x+6,b.y+8,b.w,b.h,'#263126');rect(b.x,b.y,b.w,b.h,b.col);rect(b.x+8,b.y+8,b.w-16,8,'#ffffff33')}for(const t of trees){circle(t.x+3,t.y+5,15,'#27472b');circle(t.x,t.y,15,'#2f713b')}if(mission===0){circle(target.x,target.y,25,'#ffd40055');circle(target.x,target.y,12,'#ffd400')}ctx.save();ctx.translate(sx(car.x),sy(car.y));ctx.rotate(car.angle);ctx.fillStyle='#bd3030';ctx.fillRect(-24,-40,48,80);ctx.fillStyle='#253b55';ctx.fillRect(-19,-18,38,27);ctx.fillStyle='#151515';ctx.fillRect(-27,-29,7,17);ctx.fillRect(20,-29,7,17);ctx.fillRect(-27,12,7,17);ctx.fillRect(20,12,7,17);ctx.restore();if(!inCar){circle(player.x,player.y+4,13,'#1119');circle(player.x,player.y,11,'#225fc7');circle(player.x,player.y-13,7,'#d29a73')}for(const p of police){ctx.save();ctx.translate(sx(p.x),sy(p.y));ctx.rotate(p.angle);ctx.fillStyle='#f2f2f2';ctx.fillRect(-20,-30,40,60);ctx.fillStyle='#193d70';ctx.fillRect(-17,-5,34,20);ctx.fillStyle='#e33';ctx.fillRect(-18,-28,16,6);ctx.fillStyle='#29f';ctx.fillRect(2,-28,16,6);ctx.restore()}}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+function toggleCar(){if(inCar){inCar=false;player.x=car.x+38;player.y=car.y;show('Keluar dari mobil')}else if(dist(player,car)<60){inCar=true;show('Masuk mobil')}}
+function show(t){const m=document.getElementById('msg');m.textContent=t;m.style.opacity=1;clearTimeout(msgTimer);msgTimer=setTimeout(()=>m.style.opacity=0,1200)}
+function updateHud(){document.getElementById('cash').textContent=Math.floor(cash);document.getElementById('hp').textContent=Math.max(0,Math.floor(hp));document.getElementById('wanted').textContent='★'.repeat(wanted)+'☆'.repeat(5-wanted);document.getElementById('mission').textContent=mission===0?'Misi: Pergi ke titik kuning dan ambil paket.':mission===1?'Misi: Polisi mengejar! Kembali ke titik awal.':'Misi selesai! Kamu mendapat $500.'}
+function loop(now){let dt=Math.min((now-last)/1000,.04);last=now;let dx=(keys.right?1:0)-(keys.left?1:0),dy=(keys.down?1:0)-(keys.up?1:0);let len=Math.hypot(dx,dy)||1;if(dx||dy){let sp=(inCar?260:150)*(keys.run&&!inCar?1.7:1)*dt;if(inCar){car.x+=dx/len*sp;car.y+=dy/len*sp;car.angle=Math.atan2(dy,dx)+Math.PI/2}else{player.x+=dx/len*sp;player.y+=dy/len*sp;player.angle=Math.atan2(dy,dx)+Math.PI/2}}let active=inCar?car:player;camX+=(active.x-camX)*.12;camY+=(active.y-camY)*.12;if(mission===0&&dist(player,target)<45){mission=1;wanted=2;cash+=100;target={x:0,y:0};for(let i=0;i<3;i++)police.push({x:player.x-200+i*80,y:player.y-250,angle:0});show('Paket didapat! +$100')}if(mission===1&&Math.hypot(player.x,player.y)<70){mission=2;wanted=0;cash+=500;police=[];show('Misi selesai! +$500')}for(const p of police){let a=Math.atan2(active.y-p.y,active.x-p.x);p.angle=a+Math.PI/2;p.x+=Math.cos(a)*75*dt;p.y+=Math.sin(a)*75*dt;if(dist(p,active)<35)hp-=25*dt}if(hp<=0){hp=100;cash=Math.max(0,cash-200);mission=0;wanted=0;police=[];player.x=0;player.y=0;target={x:420,y:420};show('Tertangkap polisi! -$200')}drawWorld();updateHud();requestAnimationFrame(loop)}
+updateHud();requestAnimationFrame(loop);
+</script>
+</body>
+</html>
