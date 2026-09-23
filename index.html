@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V20</title>
+<title>Open City V21</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -25,8 +25,8 @@ canvas{display:block;width:100vw;height:100vh}
 <body>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V20</b><br>
-💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span><br>
+<div id="hud">🌆 <b>OPEN CITY V21</b><br>
+💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
 <div class="joy" id="joy"><div class="stick" id="stick"></div></div>
@@ -36,7 +36,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="hint"></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
-<p><b>V20 MOBILE LIFE UPDATE</b><br>Naik mobil lebih mudah, auto-enter dari tombol AKSI, garasi upgrade, repair, save otomatis, misi bertingkat, cash pickup, nitro, wanted, polisi, SPBU, toko, safehouse, minimap dan siang-malam.</p>
+<p><b>V21 CITY LIFE & XP UPDATE</b><br>Naik mobil lebih mudah, sistem XP & level, misi berantai, reward meningkat, cash pickup, garasi upgrade, repair, nitro, wanted, polisi, SPBU, toko, safehouse, minimap dan siang-malam.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 
@@ -58,7 +58,7 @@ const shop={x:-360,y:0};
 const home={x:0,y:360};
 const garage={x:0,y:-360};
 let started=false,inCar=false,money=1000,hp=100,wanted=0,fuel=100,clock=8;
-let carLevel=1,repairCooldown=0;
+let carLevel=1,repairCooldown=0,level=1,xp=0;
 let joyX=0,joyY=0,pointerId=null,last=0,missionCount=0,nitro=100,nitroOn=false,score=0;
 const traffic=[],npcs=[],police=[],trees=[],lamps=[],cashDrops=[];
 
@@ -140,13 +140,13 @@ function toggleCar(){
 }
 
 function completeMission(){
-  missionCount++;const reward=300+missionCount*50;money+=reward;score+=reward;wanted=clamp(wanted+1,0,5);
+  missionCount++;xp+=100;level=Math.floor(xp/300)+1;const reward=300+missionCount*50+Math.max(0,level-1)*75;money+=reward;score+=reward;wanted=clamp(wanted+1,0,5);
   if(missionCount%2===0){target.x=Math.round((((missionCount*613)%2800)-1400)/grid)*grid;target.y=clamp(((missionCount*827)%2800)-1400,-world+100,world-100)}else{target.x=clamp(((missionCount*613)%2800)-1400,-world+100,world-100);target.y=Math.round((((missionCount*827)%2800)-1400)/grid)*grid}
   const kinds=["Antar paket","Kejar checkpoint","Kunjungi lokasi","Jelajahi distrik"];
   setMission(kinds[missionCount%kinds.length]+" selesai! +$"+reward+". Tujuan berikutnya.");
   police.length=0;
   for(let i=0;i<wanted;i++)police.push({x:target.x+220+i*55,y:target.y-220-i*35});
-  showHint("MISI SELESAI  +$"+reward);
+  showHint("MISI SELESAI  +$"+reward+" • XP +100 • Lv."+level);
 }
 function action(){
   if(!started)return;
@@ -177,7 +177,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").onclick=()=>{
   loadGame();started=true;document.getElementById("start").style.display="none";
-  last=performance.now();showHint("Cari titik kuning untuk memulai misi");
+  last=performance.now();showHint("V21 aktif • kumpulkan XP untuk naik level");
 };
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -351,6 +351,7 @@ function draw(t,dt){
   if(night){ctx.fillStyle="#09132a66";ctx.fillRect(0,0,W,H)}
   drawMini(ox,oy);
   document.getElementById("money").textContent=money;
+  document.getElementById("level").textContent=level;
   document.getElementById("hp").textContent=Math.floor(hp);
   document.getElementById("wanted").textContent="★".repeat(wanted)+"☆".repeat(5-wanted);
   const kmh=inCar?Math.round(car.speed*.72):0;
@@ -397,11 +398,11 @@ function update(dt){
 }
 
 function saveGame(){
-  try{localStorage.setItem("openCityV20",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,carX:car.x,carY:car.y,carA:car.a,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
+  try{localStorage.setItem("openCityV21",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,carX:car.x,carY:car.y,carA:car.a,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
 }
 function loadGame(){
-  try{const d=JSON.parse(localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
-    money=Number.isFinite(d.money)?d.money:money;hp=Number.isFinite(d.hp)?d.hp:hp;wanted=Number.isFinite(d.wanted)?d.wanted:wanted;fuel=Number.isFinite(d.fuel)?d.fuel:fuel;clock=Number.isFinite(d.clock)?d.clock:clock;missionCount=Number.isFinite(d.missionCount)?d.missionCount:missionCount;nitro=Number.isFinite(d.nitro)?d.nitro:nitro;score=Number.isFinite(d.score)?d.score:score;carLevel=clamp(Number(d.carLevel)||1,1,5);car.x=Number.isFinite(d.carX)?d.carX:car.x;car.y=Number.isFinite(d.carY)?d.carY:car.y;car.a=Number.isFinite(d.carA)?d.carA:car.a;
+  try{const d=JSON.parse(localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
+    money=Number.isFinite(d.money)?d.money:money;hp=Number.isFinite(d.hp)?d.hp:hp;wanted=Number.isFinite(d.wanted)?d.wanted:wanted;fuel=Number.isFinite(d.fuel)?d.fuel:fuel;clock=Number.isFinite(d.clock)?d.clock:clock;missionCount=Number.isFinite(d.missionCount)?d.missionCount:missionCount;nitro=Number.isFinite(d.nitro)?d.nitro:nitro;score=Number.isFinite(d.score)?d.score:score;xp=Number.isFinite(d.xp)?d.xp:missionCount*100;level=Math.max(1,Number.isFinite(d.level)?d.level:Math.floor(xp/300)+1);carLevel=clamp(Number(d.carLevel)||1,1,5);car.x=Number.isFinite(d.carX)?d.carX:car.x;car.y=Number.isFinite(d.carY)?d.carY:car.y;car.a=Number.isFinite(d.carA)?d.carA:car.a;
     if(Array.isArray(d.cashDrops))cashDrops.forEach((x,i)=>x.got=!!d.cashDrops[i]);p.x=car.x;p.y=car.y;
   }catch(e){}
 }
