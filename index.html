@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V29 • Landscape Edition</title>
+<title>Open City V29.1 • Landscape Edition</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -197,7 +197,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V29 siap dimainkan • mode landscape opsional");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V29.1 siap dimainkan • mode landscape opsional");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
