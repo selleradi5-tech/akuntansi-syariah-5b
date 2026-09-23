@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V34.2 • 3D Lite</title>
+<title>Open City V34.9 • Realistic Driving</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -31,7 +31,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="threeLoading" style="position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#071018ee;color:#fff;font-weight:bold;font-size:18px">Memuat kota 3D ringan...</div>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V34.8 • DRIVE BUTTONS</b><br>
+<div id="hud">🌆 <b>OPEN CITY V34.9 • DRIVE BUTTONS</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -44,7 +44,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="rotate"><div class="rotateBox"><div class="rotateIcon">📱</div><h2>Putar HP ke Lanskap</h2><p>V29 dibuat untuk layar horizontal agar kota, mobil, polisi, dan minimap lebih luas.</p></div></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
-<p><b>V34.8 3D CONTROLS</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
+<p><b>V34.9 3D CONTROLS</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 
@@ -252,7 +252,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V34.8 • joystick/D-pad untuk jalan • GAS untuk mobil");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V34.9 • joystick/D-pad untuk jalan • GAS untuk mobil");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -587,10 +587,14 @@ function update(dt){
   if(inCar){
     if(Math.abs(dx)+Math.abs(dy)>.05&&fuel>0){
       const boost=nitroOn&&nitro>0?1.8:1;
-      const targetSpeed=Math.hypot(dx,dy)*(250+carLevel*22)*boost;
-      car.speed+=(targetSpeed-car.speed)*Math.min(1,dt*6);
+      const input=Math.min(1,Math.hypot(dx,dy));
+      const maxSpeed=(125+carLevel*8)*boost;
+      const targetSpeed=input*maxSpeed;
+      car.speed+=(targetSpeed-car.speed)*Math.min(1,dt*2.8);
       if(nitroOn&&nitro>0)nitro=clamp(nitro-dt*22,0,100);else nitro=clamp(nitro+dt*3,0,100);
-      if(Math.abs(dx)>Math.abs(dy))car.a=dx>0?0:Math.PI;else car.a=dy>0?Math.PI/2:-Math.PI/2;
+      const steer=(driveRight?1:0)-(driveLeft?1:0);
+      if(steer)car.a+=steer*(1.55+Math.min(car.speed/120,1)*0.9)*dt;
+      else if(Math.abs(dx)>Math.abs(dy))car.a=dx>0?0:Math.PI;else if(Math.abs(dy)>0.2)car.a=dy>0?Math.PI/2:-Math.PI/2;
       const ox=car.x,oy=car.y;
       moveEntity(car,Math.cos(car.a)*car.speed*dt,Math.sin(car.a)*car.speed*dt);
       if(car.x!==ox||car.y!==oy)fuel=clamp(fuel-Math.abs(car.speed)*dt*.006,0,100);
