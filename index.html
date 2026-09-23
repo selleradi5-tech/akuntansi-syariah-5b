@@ -600,7 +600,7 @@ requestAnimationFrame(loop);
 })();
 </script>
 
-<script src="https://unpkg.com/three@0.160.0/build/three.min.js"><\/script>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
 (()=> {
 "use strict";
@@ -687,9 +687,9 @@ function render3D(t){
   if(player3D){player3D.position.set(st.p.x,.85,st.p.y);player3D.visible=!st.inCar}
   if(car3D){car3D.position.set(st.car.x,.1,st.car.y);car3D.rotation.y=-st.car.a;car3D.children[0].material.color.set(st.car.color||"#d74343");}
   const target=new THREE.Vector3(ox,1.2,oz);
-  const desired=new THREE.Vector3(ox-10*Math.cos(car.a),7.5,oz-10*Math.sin(car.a));
+  const heading=st.inCar?st.car.a:0; const desired=new THREE.Vector3(ox-10*Math.cos(heading),7.5,oz-10*Math.sin(heading));
   camera.position.lerp(desired,.12);camera.lookAt(target);
-  const night=clock<6||clock>18;
+  const night=st.clock<6||st.clock>18;
   scene.background.set(night?"#101a32":st.weather==="Hujan"?"#587184":"#79a8d0");
   renderer.render(scene,camera);
   requestAnimationFrame(render3D);
