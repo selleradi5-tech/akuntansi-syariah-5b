@@ -82,7 +82,7 @@ for(let i=0;i<18;i++){
     s:70+(i%4)*13,
     type:i%3,
     color:i%3===0?"#e6b43b":i%3===1?"#3e87d8":"#d95454",
-    w:48,h:26
+    w:MAIN_CAR.w,h:MAIN_CAR.h
   });
 }
 for(let i=0;i<42;i++){
@@ -159,7 +159,8 @@ function toggleCar(){
   if(!best){showHint("Dekati mobil lebih dekat");return}
   if(best.type==="traffic"){
     const v=traffic.splice(best.i,1)[0];
-    car.x=v.x;car.y=v.y;car.a=v.a;car.speed=0;car.color=v.color||"#d95454";car.w=v.w||48;car.h=v.h||26;
+    car.x=v.x;car.y=v.y;car.a=v.a;car.speed=0;
+    car.color=v.color||"#d95454";car.w=MAIN_CAR.w;car.h=MAIN_CAR.h;
     carIsNpc=true;showHint("🚗 Mobil NPC sekarang jadi mobilmu");
   }else{
     car.speed=0;car.color=MAIN_CAR.color;car.w=MAIN_CAR.w;car.h=MAIN_CAR.h;carIsNpc=false;
@@ -174,7 +175,7 @@ function completeMission(){
   const kinds=["Antar paket","Kejar checkpoint","Kunjungi lokasi","Jelajahi distrik"];
   setMission(kinds[missionCount%kinds.length]+" selesai! +$"+reward+" • Streak "+missionStreak+". Tujuan berikutnya.");
   police.length=0;
-  for(let i=0;i<wanted;i++)police.push({x:target.x+220+i*55,y:target.y-220-i*35});
+  for(let i=0;i<wanted;i++)police.push({x:Math.round((target.x+220+i*55)/grid)*grid,y:Math.round((target.y-220-i*35)/grid)*grid,a:0});
   showHint("MISI SELESAI +$"+reward+" • XP +100 • Lv."+level+(level>oldLevel?" • LEVEL UP +$500":""));
 }
 function action(){
@@ -294,11 +295,13 @@ function drawTraffic(cx,cy,dt){
     if(v.y>world+150)v.y=-world-150;if(v.y<-world-150)v.y=world+150;
     const [sx,sy]=worldToScreen(v.x,v.y,cx,cy);
     ctx.save();ctx.translate(sx,sy);ctx.rotate(v.a);
-    ctx.fillStyle=v.type===0?"#e6b43b":v.type===1?"#3e87d8":"#d95454";
-    ctx.fillRect(-24,-13,48,26);
-    ctx.fillStyle="#1c303a";ctx.fillRect(-9,-10,20,20);
-    ctx.fillStyle="#111";ctx.fillRect(-18,-15,8,4);ctx.fillRect(10,-15,8,4);ctx.fillRect(-18,11,8,4);ctx.fillRect(10,11,8,4);
-    ctx.fillStyle="#fff4c2";ctx.fillRect(20,-8,4,5);ctx.fillRect(20,3,4,5);
+    const w=v.w||MAIN_CAR.w,h=v.h||MAIN_CAR.h;
+    ctx.fillStyle=v.color||"#d95454";ctx.fillRect(-w/2,-h/2,w,h);
+    ctx.fillStyle="#1c303a";ctx.fillRect(-w*.13,-h*.38,w*.42,h*.76);
+    ctx.fillStyle="#111";const ww=Math.max(8,w*.18),wh=Math.max(4,h*.16);
+    ctx.fillRect(-w*.37,-h/2-wh+2,ww,wh);ctx.fillRect(w*.19,-h/2-wh+2,ww,wh);
+    ctx.fillRect(-w*.37,h/2-2,ww,wh);ctx.fillRect(w*.19,h/2-2,ww,wh);
+    ctx.fillStyle="#fff4c2";ctx.fillRect(w/2-6,-h*.28,6,5);ctx.fillRect(w/2-6,h*.08,6,5);
     ctx.restore();
   }
 }
@@ -335,24 +338,35 @@ function drawCarAt(wx,wy,cx,cy){
 }
 function drawCar(){drawCarAt(car.x,car.y,car.x,car.y)}
 
+function snapRoad(x,y){
+  const rx=Math.round(x/grid)*grid,ry=Math.round(y/grid)*grid;
+  if(Math.abs(x-rx)<=Math.abs(y-ry)) return {x:rx,y:clamp(y,-world,world),a:0};
+  return {x:clamp(x,-world,world),y:ry,a:Math.PI/2};
+}
 function drawPolice(cx,cy,dt,ox,oy){
   for(const q of police){
-    const d=dist(q.x,q.y,ox,oy),spd=d>100?72:45;
+    const d=dist(q.x,q.y,ox,oy),spd=d>100?72:55;
+    if(!Number.isFinite(q.a))q.a=0;
+    if(!isRoad(q.x,q.y)){const r=snapRoad(q.x,q.y);q.x=r.x;q.y=r.y;q.a=r.a}
     if(d>45){
-      const dx=ox-q.x,dy=oy-q.y;
-      if(isRoad(q.x,q.y)){
-        if(roadX(q.x)&&!roadY(q.y)){q.a=dx>=0?0:Math.PI;q.x+=Math.cos(q.a)*spd*dt}
-        else if(roadY(q.y)&&!roadX(q.x)){q.a=dy>=0?Math.PI/2:-Math.PI/2;q.y+=Math.sin(q.a)*spd*dt}
-        else {q.a=Math.abs(dx)>Math.abs(dy)?(dx>=0?0:Math.PI):(dy>=0?Math.PI/2:-Math.PI/2);q.x+=Math.cos(q.a)*spd*dt;q.y+=Math.sin(q.a)*spd*dt}
+      const horizontal=Math.abs(Math.sin(q.a))<.5;
+      const onIntersection=roadX(q.x)&&roadY(q.y);
+      if(onIntersection){
+        const dx=ox-q.x,dy=oy-q.y;
+        if(Math.abs(dx)>Math.abs(dy))q.a=dx>=0?0:Math.PI;
+        else q.a=dy>=0?Math.PI/2:-Math.PI/2;
+      }else if(horizontal){
+        q.a=q.a===0||q.a===Math.PI?q.a:(ox>=q.x?0:Math.PI);
       }else{
-        const rx=Math.round(q.x/grid)*grid,ry=Math.round(q.y/grid)*grid;
-        if(Math.abs(dx)>Math.abs(dy))q.y=ry;else q.x=rx;
+        q.a=q.a===Math.PI/2||q.a===-Math.PI/2?q.a:(oy>=q.y?Math.PI/2:-Math.PI/2);
       }
-      if(!isRoad(q.x,q.y)){const rx=Math.round(q.x/grid)*grid,ry=Math.round(q.y/grid)*grid;q.x=rx;q.y=ry}
+      q.x+=Math.cos(q.a)*spd*dt;q.y+=Math.sin(q.a)*spd*dt;
+      if(Math.abs((q.x%grid+grid)%grid)>grid-roadW/2 && Math.abs((q.x%grid+grid)%grid)<roadW/2+2)q.x=Math.round(q.x/grid)*grid;
+      if(Math.abs((q.y%grid+grid)%grid)>grid-roadW/2 && Math.abs((q.y%grid+grid)%grid)<roadW/2+2)q.y=Math.round(q.y/grid)*grid;
     }
     if(d<42){hp=clamp(hp-.018,0,100);wanted=clamp(wanted,0,5)}
     const [sx,sy]=worldToScreen(q.x,q.y,cx,cy);
-    ctx.save();ctx.translate(sx,sy);ctx.rotate(Math.atan2(oy-q.y,ox-q.x));
+    ctx.save();ctx.translate(sx,sy);ctx.rotate(q.a);
     ctx.fillStyle="#f2f2f2";ctx.fillRect(-26,-13,52,26);ctx.fillStyle="#17232c";ctx.fillRect(-9,-10,20,20);
     ctx.fillStyle=Math.floor(performance.now()/180)%2?"#e33":"#398cff";ctx.fillRect(-5,-17,10,5);
     ctx.restore();
