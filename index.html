@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V32 • Mega City</title>
+<title>Open City V33 • 3D City Preview</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -27,9 +27,10 @@ canvas{display:block;width:100vw;height:100vh}
 </style>
 </head>
 <body>
+<div id="threeLoading" style="position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#071018ee;color:#fff;font-weight:bold;font-size:18px">Memuat dunia 3D...</div>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V32 • LIVING CITY</b><br>
+<div id="hud">🌆 <b>OPEN CITY V33 • 3D CITY</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -42,7 +43,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="rotate"><div class="rotateBox"><div class="rotateIcon">📱</div><h2>Putar HP ke Lanskap</h2><p>V29 dibuat untuk layar horizontal agar kota, mobil, polisi, dan minimap lebih luas.</p></div></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
-<p><b>V29 LANDSCAPE EDITION</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
+<p><b>V33 3D CITY PREVIEW</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 
@@ -215,7 +216,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V32 Living City siap dimainkan • mode landscape opsional");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V33 3D City aktif • mode landscape disarankan");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -577,10 +578,10 @@ function update(dt){
 }
 
 function saveGame(){
-  try{localStorage.setItem("openCityV32",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
+  try{localStorage.setItem("openCityV33",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
 }
 function loadGame(){
-  try{const d=JSON.parse(localStorage.getItem("openCityV32")||localStorage.getItem("openCityV32")||localStorage.getItem("openCityV29")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
+  try{const d=JSON.parse(localStorage.getItem("openCityV33")||localStorage.getItem("openCityV32")||localStorage.getItem("openCityV29")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
     money=Number.isFinite(d.money)?d.money:money;hp=Number.isFinite(d.hp)?d.hp:hp;wanted=Number.isFinite(d.wanted)?d.wanted:wanted;fuel=Number.isFinite(d.fuel)?d.fuel:fuel;clock=Number.isFinite(d.clock)?d.clock:clock;missionCount=Number.isFinite(d.missionCount)?d.missionCount:missionCount;nitro=Number.isFinite(d.nitro)?d.nitro:nitro;score=Number.isFinite(d.score)?d.score:score;trafficHits=Number.isFinite(d.trafficHits)?d.trafficHits:0;weather=typeof d.weather==="string"?d.weather:weather;xp=Number.isFinite(d.xp)?d.xp:missionCount*100;level=Math.max(1,Number.isFinite(d.level)?d.level:Math.floor(xp/300)+1);missionStreak=Number.isFinite(d.missionStreak)?d.missionStreak:0;carLevel=clamp(Number(d.carLevel)||1,1,5);car.x=Number.isFinite(d.carX)?d.carX:car.x;car.y=Number.isFinite(d.carY)?d.carY:car.y;car.a=Number.isFinite(d.carA)?d.carA:car.a;car.color=typeof d.carColor==="string"?d.carColor:car.color;car.w=Number.isFinite(d.carW)?d.carW:car.w;car.h=Number.isFinite(d.carH)?d.carH:car.h;
     if(Array.isArray(d.cashDrops))cashDrops.forEach((x,i)=>x.got=!!d.cashDrops[i]);
     if(blocked(car.x,car.y)){car.x=Math.round(car.x/grid)*grid;car.y=Math.round(car.y/grid)*grid;car.speed=0}
@@ -596,6 +597,91 @@ function loop(t){
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"><\/script>
+<script>
+(()=> {
+"use strict";
+const overlay=document.getElementById("threeLoading");
+const oldCanvas=document.getElementById("c");
+const mini=document.getElementById("mini");
+const startBtn=document.getElementById("play");
+let threeStarted=false,scene,camera,renderer,worldGroup,player3D,car3D;
+function makeMat(color,rough=0.8){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:0.05})}
+function box(w,h,d,color){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),makeMat(color));m.castShadow=true;m.receiveShadow=true;return m}
+function addBuilding(x,z,w,d,h,color){
+  const b=box(w,h,d,color);b.position.set(x,h/2,z);worldGroup.add(b);
+  const roof=box(w+.5,.35,d+.5,"#252b30");roof.position.set(x,h+.18,z);worldGroup.add(roof);
+  for(let yy=2;yy<h-1;yy+=2.8)for(let xx=-w/2+1.2;xx<w/2-1;xx+=2.8){
+    const win=box(.9,.8,.05,(Math.floor(xx+yy)%5===0)?"#f6d66a":"#27404c");
+    win.position.set(x+xx,yy,z-d/2-.04);worldGroup.add(win);
+  }
+}
+function carMesh(color="#d74343"){
+  const g=new THREE.Group();
+  const body=box(2.8,.55,1.35,color);body.position.y=.65;g.add(body);
+  const cabin=box(1.45,.5,1.08,"#223943");cabin.position.set(-.05,1.02,0);g.add(cabin);
+  for(const sx of [-1,1])for(const sz of [-.62,.62]){
+    const w=box(.45,.22,.12,"#111820");w.position.set(sx*0.9,.35,sz);g.add(w);
+  }
+  const lamp=box(.12,.14,.25,"#ffe6a0");lamp.position.set(1.42,.72,-.42);g.add(lamp);
+  return g;
+}
+function init3D(){
+  if(threeStarted||!window.THREE)return;
+  threeStarted=true;overlay.style.display="flex";overlay.textContent="Membangun kota 3D...";
+  oldCanvas.style.display="none";mini.style.display="none";
+  scene=new THREE.Scene();scene.background=new THREE.Color("#79a8d0");
+  camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,3000);
+  renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:"high-performance"});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  document.body.insertBefore(renderer.domElement,document.body.firstChild);
+  worldGroup=new THREE.Group();scene.add(worldGroup);
+  scene.add(new THREE.HemisphereLight(0xbfe5ff,0x28452c,1.5));
+  const sun=new THREE.DirectionalLight(0xfff0cf,2.2);sun.position.set(500,700,300);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+  const ground=box(3800,.2,3800,"#477a49");ground.position.y=-.1;ground.receiveShadow=true;scene.add(ground);
+  for(let q=-1800;q<=1800;q+=360){
+    const r1=box(92,.04,3800,"#343b40");r1.position.set(q,.01,0);worldGroup.add(r1);
+    const r2=box(3800,.04,92,"#343b40");r2.position.set(0,.012,q);worldGroup.add(r2);
+    const l1=box(3,.045,3800,"#d4c85c");l1.position.set(q,.04,0);worldGroup.add(l1);
+    const l2=box(3800,.045,3,"#d4c85c");l2.position.set(0,.04,q);worldGroup.add(l2);
+  }
+  let i=0;
+  for(let x=-1620;x<=1620;x+=360)for(let z=-1620;z<=1620;z+=360){
+    addBuilding(x+136,z+136,240,240,35+(i++%5)*14,["#59676d","#68777b","#7b6d65","#536c74"][i%4]);
+  }
+  for(const q of [[720,0,"#5d7fa0"],[-720,0,"#8a5d74"],[0,720,"#4f8150"],[0,-720,"#556b73"]]){
+    const lm=box(180,35,120,q[2]);lm.position.set(q[0],17.5,q[1]);worldGroup.add(lm);
+  }
+  const poi=[
+    [120,55,"#39bf70"],[-120,55,"#a855d8"],[55,120,"#df6959"],[-55,-120,"#e1b72f"]
+  ];
+  poi.forEach(([x,z,col])=>{const m=box(70,12,55,col);m.position.set(x,6,z);worldGroup.add(m)});
+  player3D=box(.8,1.7,.55,"#267be0");player3D.position.y=.85;scene.add(player3D);
+  car3D=carMesh("#d74343");car3D.position.set(30,.1,0);scene.add(car3D);
+  overlay.style.display="none";
+  resize3D();requestAnimationFrame(render3D);
+}
+function resize3D(){if(!renderer)return;camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)}
+addEventListener("resize",resize3D);
+function render3D(t){
+  if(!renderer)return;
+  const dt=.016;
+  const ox=inCar?car.x:p.x,oz=inCar?car.y:p.y;
+  if(player3D){player3D.position.set(p.x,.85,p.y);player3D.visible=!inCar}
+  if(car3D){car3D.position.set(car.x,.1,car.y);car3D.rotation.y=-car.a;car3D.children[0].material.color.set(car.color||"#d74343");}
+  const target=new THREE.Vector3(ox,1.2,oz);
+  const desired=new THREE.Vector3(ox-10*Math.cos(car.a),7.5,oz-10*Math.sin(car.a));
+  camera.position.lerp(desired,.12);camera.lookAt(target);
+  const night=clock<6||clock>18;
+  scene.background.set(night?"#101a32":weather==="Hujan"?"#587184":"#79a8d0");
+  renderer.render(scene,camera);
+  requestAnimationFrame(render3D);
+}
+startBtn.addEventListener("click",()=>setTimeout(init3D,50));
 })();
 </script>
 </body>
