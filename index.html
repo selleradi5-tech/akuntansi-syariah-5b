@@ -50,7 +50,8 @@ function resize(){W=innerWidth;H=innerHeight;canvas.width=W;canvas.height=H}
 resize();addEventListener("resize",resize);
 
 const p={x:0,y:0};
-const car={x:30,y:0,a:0,speed:0,color:"#d74343",w:68,h:32};
+const MAIN_CAR={color:"#d74343",w:68,h:32};
+const car={x:30,y:0,a:0,speed:0,...MAIN_CAR};
 const player={x:0,y:0};
 const target={x:600,y:600};
 const fuelStation={x:360,y:0};
@@ -135,6 +136,7 @@ function toggleCar(){
   if(!started)return;
   if(inCar){
     inCar=false;p.x=car.x+Math.cos(car.a)*42;p.y=car.y+Math.sin(car.a)*42;
+    document.getElementById("carBtn").textContent="MASUK MOBIL";
     showHint("Kamu keluar dari mobil • mobil tetap terparkir");
     return;
   }
@@ -151,7 +153,7 @@ function toggleCar(){
     car.x=v.x;car.y=v.y;car.a=v.a;car.speed=0;car.color=v.color||"#d95454";car.w=v.w||48;car.h=v.h||26;
     carIsNpc=true;showHint("🚗 Mobil NPC sekarang jadi mobilmu");
   }else{
-    car.speed=0;
+    car.speed=0;car.color=MAIN_CAR.color;car.w=MAIN_CAR.w;car.h=MAIN_CAR.h;carIsNpc=false;
     showHint("🚗 Mobil utama berhasil dinaiki!");
   }
   inCar=true;p.x=car.x;p.y=car.y;document.getElementById("carBtn").textContent="KELUAR MOBIL";
@@ -327,7 +329,18 @@ function drawCar(){drawCarAt(car.x,car.y,car.x,car.y)}
 function drawPolice(cx,cy,dt,ox,oy){
   for(const q of police){
     const d=dist(q.x,q.y,ox,oy),spd=d>100?72:45;
-    if(d>45){q.x+=(ox-q.x)/Math.max(d,1)*spd*dt;q.y+=(oy-q.y)/Math.max(d,1)*spd*dt}
+    if(d>45){
+      const dx=ox-q.x,dy=oy-q.y;
+      if(isRoad(q.x,q.y)){
+        if(roadX(q.x)&&!roadY(q.y)){q.a=dx>=0?0:Math.PI;q.x+=Math.cos(q.a)*spd*dt}
+        else if(roadY(q.y)&&!roadX(q.x)){q.a=dy>=0?Math.PI/2:-Math.PI/2;q.y+=Math.sin(q.a)*spd*dt}
+        else {q.a=Math.abs(dx)>Math.abs(dy)?(dx>=0?0:Math.PI):(dy>=0?Math.PI/2:-Math.PI/2);q.x+=Math.cos(q.a)*spd*dt;q.y+=Math.sin(q.a)*spd*dt}
+      }else{
+        const rx=Math.round(q.x/grid)*grid,ry=Math.round(q.y/grid)*grid;
+        if(Math.abs(dx)>Math.abs(dy))q.y=ry;else q.x=rx;
+      }
+      if(!isRoad(q.x,q.y)){const rx=Math.round(q.x/grid)*grid,ry=Math.round(q.y/grid)*grid;q.x=rx;q.y=ry}
+    }
     if(d<42){hp=clamp(hp-.018,0,100);wanted=clamp(wanted,0,5)}
     const [sx,sy]=worldToScreen(q.x,q.y,cx,cy);
     ctx.save();ctx.translate(sx,sy);ctx.rotate(Math.atan2(oy-q.y,ox-q.x));
