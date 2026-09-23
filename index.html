@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V33.4 • 3D City</title>
+<title>Open City V34 • 3D City</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -30,7 +30,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="threeLoading" style="position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#071018ee;color:#fff;font-weight:bold;font-size:18px">Memuat dunia 3D...</div>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V33.4 • 3D CITY</b><br>
+<div id="hud">🌆 <b>OPEN CITY V34 • 3D CITY</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -216,7 +216,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V33 3D City aktif • mode landscape disarankan");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V34 3D City aktif • mode landscape disarankan");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -578,7 +578,7 @@ function update(dt){
 }
 
 function saveGame(){
-  try{localStorage.setItem("openCityV33_4",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
+  try{localStorage.setItem("openCityV34",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
 }
 function loadGame(){
   try{const d=JSON.parse(localStorage.getItem("openCityV33")||localStorage.getItem("openCityV32")||localStorage.getItem("openCityV29")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
@@ -600,7 +600,7 @@ requestAnimationFrame(loop);
 })();
 </script>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 <script>
 (()=>{
 "use strict";
@@ -608,6 +608,27 @@ const overlay=document.getElementById("threeLoading");
 const oldCanvas=document.getElementById("c");
 const mini=document.getElementById("mini");
 const startBtn=document.getElementById("play");
+async function ensureThree(){
+  if(window.THREE&&THREE.WebGLRenderer)return true;
+  const urls=[
+    "https://unpkg.com/three@0.160.0/build/three.min.js",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js"
+  ];
+  for(const url of urls){
+    try{
+      await new Promise((resolve,reject)=>{
+        const s=document.createElement("script");s.src=url;s.async=true;
+        s.onload=()=>resolve();s.onerror=reject;document.head.appendChild(s);
+      });
+      if(window.THREE&&THREE.WebGLRenderer)return true;
+    }catch(e){}
+  }
+  try{
+    const mod=await import("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js");
+    window.THREE=mod;return !!THREE.WebGLRenderer;
+  }catch(e){return false}
+}
 let threeStarted=false,scene,camera,renderer,worldGroup,player3D,car3D,animId;
 
 function makeMat(color,rough=.8){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:.05})}
@@ -641,10 +662,11 @@ function fail3D(msg){
   setTimeout(()=>{overlay.style.display="none"},2200);
   showHint("⚠️ 3D gagal dimuat. Game 2D tetap aktif.");
 }
-function init3D(){
+async function init3D(){
   if(threeStarted)return;
   try{
-    if(!window.THREE||!THREE.WebGLRenderer)throw new Error("THREE tidak tersedia");
+    const ready=await ensureThree();
+    if(!ready)throw new Error("THREE tidak tersedia");
     threeStarted=true;
     overlay.style.display="flex";overlay.textContent="Membangun kota 3D...";
     oldCanvas.style.display="none";mini.style.display="none";
@@ -725,7 +747,12 @@ function render3D(t){
     fail3D("3D render error");
   }
 }
-if(startBtn)startBtn.addEventListener("click",()=>setTimeout(init3D,150));
+if(startBtn)startBtn.addEventListener("click",async()=>{
+  setTimeout(async()=>{await init3D()},150);
+});
+window.addEventListener("load",()=>setTimeout(async()=>{
+  if(document.getElementById("start").style.display==="none")await init3D();
+},500));
 })();
 </script>
 </body>
