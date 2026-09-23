@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V23</title>
+<title>Open City V24</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -25,7 +25,7 @@ canvas{display:block;width:100vw;height:100vh}
 <body>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V23</b><br>
+<div id="hud">🌆 <b>OPEN CITY V24</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -36,7 +36,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="hint"></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
-<p><b>V23 VEHICLE FIX & DRIVE UPDATE</b><br>Naik mobil lebih mudah, XP & level, progress bar, bonus level-up, combo misi, reward meningkat, cash pickup, garasi upgrade, repair, nitro, wanted, polisi, SPBU, toko, safehouse, minimap dan siang-malam.</p>
+<p><b>V24 STEAL & DRIVE NPC CARS</b><br>Naik mobil lebih mudah, XP & level, progress bar, bonus level-up, combo misi, reward meningkat, cash pickup, garasi upgrade, repair, nitro, wanted, polisi, SPBU, toko, safehouse, minimap dan siang-malam.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 
@@ -134,9 +134,25 @@ function toggleCar(){
   if(inCar){
     inCar=false;p.x=car.x+Math.cos(car.a)*42;p.y=car.y+Math.sin(car.a)*42;
     showHint("Kamu keluar dari mobil");
-  }else if(dist(p.x,p.y,car.x,car.y)<180){
-    inCar=true;p.x=car.x;p.y=car.y;showHint("Mobil siap dikendarai");
-  }else showHint("Dekati mobil dulu");
+    return;
+  }
+  let best=null,bestD=180;
+  const d0=dist(p.x,p.y,car.x,car.y);
+  if(d0<bestD)best={type:"player",d:d0};
+  for(let i=0;i<traffic.length;i++){
+    const v=traffic[i],d=dist(p.x,p.y,v.x,v.y);
+    if(d<bestD){bestD=d;best={type:"traffic",i,d};}
+  }
+  if(!best){showHint("Dekati mobil lebih dekat");return}
+  if(best.type==="traffic"){
+    const v=traffic.splice(best.i,1)[0];
+    car.x=v.x;car.y=v.y;car.a=v.a;car.speed=0;
+    showHint("🚗 Mobil NPC berhasil dinaiki!");
+  }else{
+    car.speed=0;
+    showHint("🚗 Mobil utama berhasil dinaiki!");
+  }
+  inCar=true;p.x=car.x;p.y=car.y;
 }
 
 function completeMission(){
@@ -150,7 +166,7 @@ function completeMission(){
 }
 function action(){
   if(!started)return;
-  if(!inCar&&dist(p.x,p.y,car.x,car.y)<180){toggleCar();return;}
+  if(!inCar){let nearCar=dist(p.x,p.y,car.x,car.y)<180;for(const v of traffic)if(dist(p.x,p.y,v.x,v.y)<180){nearCar=true;break}if(nearCar){toggleCar();return}}
   const ox=inCar?car.x:p.x,oy=inCar?car.y:p.y;
   if(dist(ox,oy,target.x,target.y)<85){completeMission();return}
   if(dist(ox,oy,fuelStation.x,fuelStation.y)<95){
@@ -177,7 +193,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").onclick=()=>{
   loadGame();started=true;document.getElementById("start").style.display="none";
-  last=performance.now();showHint("V23 aktif • mobil diperbaiki agar selalu bisa dikendarai");
+  last=performance.now();showHint("V24 aktif • mobil NPC sekarang bisa dinaiki");
 };
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -399,10 +415,10 @@ function update(dt){
 }
 
 function saveGame(){
-  try{localStorage.setItem("openCityV23",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
+  try{localStorage.setItem("openCityV24",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
 }
 function loadGame(){
-  try{const d=JSON.parse(localStorage.getItem("openCityV23")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
+  try{const d=JSON.parse(localStorage.getItem("openCityV24")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
     money=Number.isFinite(d.money)?d.money:money;hp=Number.isFinite(d.hp)?d.hp:hp;wanted=Number.isFinite(d.wanted)?d.wanted:wanted;fuel=Number.isFinite(d.fuel)?d.fuel:fuel;clock=Number.isFinite(d.clock)?d.clock:clock;missionCount=Number.isFinite(d.missionCount)?d.missionCount:missionCount;nitro=Number.isFinite(d.nitro)?d.nitro:nitro;score=Number.isFinite(d.score)?d.score:score;xp=Number.isFinite(d.xp)?d.xp:missionCount*100;level=Math.max(1,Number.isFinite(d.level)?d.level:Math.floor(xp/300)+1);missionStreak=Number.isFinite(d.missionStreak)?d.missionStreak:0;carLevel=clamp(Number(d.carLevel)||1,1,5);car.x=Number.isFinite(d.carX)?d.carX:car.x;car.y=Number.isFinite(d.carY)?d.carY:car.y;car.a=Number.isFinite(d.carA)?d.carA:car.a;
     if(Array.isArray(d.cashDrops))cashDrops.forEach((x,i)=>x.got=!!d.cashDrops[i]);
     if(blocked(car.x,car.y)){car.x=Math.round(car.x/grid)*grid;car.y=Math.round(car.y/grid)*grid;car.speed=0}
