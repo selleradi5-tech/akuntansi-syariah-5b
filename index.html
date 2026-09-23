@@ -30,7 +30,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="threeLoading" style="position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#071018ee;color:#fff;font-weight:bold;font-size:18px">Memuat kota 3D ringan...</div>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V34.3 • 3D SAFE</b><br>
+<div id="hud">🌆 <b>OPEN CITY V34.4 • 3D FIX</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -217,7 +217,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V34.3 3D Safe aktif • kontrol siap");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V34.4 3D Fix aktif • kontrol siap");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -685,7 +685,8 @@ async function init3D(){
     overlay.style.display="flex";overlay.textContent="Membangun kota 3D...";
     oldCanvas.style.display="none";mini.style.display="none";
     scene=new THREE.Scene();
-    scene.background=new THREE.Color("#79a8d0");\n    scene.fog=new THREE.Fog("#79a8d0",180,1500);
+    scene.background=new THREE.Color("#79a8d0");
+    scene.fog=new THREE.Fog("#79a8d0",180,1500);
     camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,5000);
     camera.position.set(0,8,12);
     renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:"high-performance"});
