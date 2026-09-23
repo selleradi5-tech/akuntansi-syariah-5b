@@ -19,7 +19,11 @@ canvas{display:block;width:100vw;height:100vh}
 .joy{position:fixed;z-index:8;left:14px;bottom:16px;width:142px;height:142px;border:2px solid #fff3;border-radius:50%;background:#ffffff0b}
 .stick{position:absolute;left:40px;top:40px;width:58px;height:58px;border-radius:50%;background:#ffffff38}
 #mini{position:fixed;right:9px;top:72px;width:112px;height:112px;z-index:6;border:2px solid #ffffff66;border-radius:12px;background:#142019dd}
-#hint{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:7;background:#071018dd;padding:8px 14px;border-radius:12px;font-size:12px;white-space:nowrap;display:none;box-shadow:0 5px 18px #0007}\n#rotate{display:none;position:fixed;inset:0;z-index:1;background:#081018f7;align-items:center;justify-content:center;text-align:center;padding:28px}.rotateBox{max-width:330px}.rotateIcon{font-size:64px;animation:tilt 1.4s infinite alternate}@keyframes tilt{to{transform:rotate(90deg)}}\n#modeBtn{position:fixed;right:14px;top:72px;z-index:8;width:76px;height:42px;border:1px solid #fff4;border-radius:13px;background:#071018dd;color:#fff;font-weight:bold}\n@media (orientation:landscape){#hud{top:7px;left:12px;right:auto;max-width:70vw;font-size:12px}#mini{right:10px;top:10px;width:118px;height:118px}.joy{left:18px;bottom:18px;width:128px;height:128px}.stick{left:35px;top:35px;width:58px;height:58px}.a{right:104px;bottom:18px}.b{right:190px;bottom:18px}.nitro{right:18px;bottom:82px}.panel{max-width:500px}.panel p{font-size:14px}}\n@media (orientation:portrait){#rotate{display:flex}}
+#hint{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:7;background:#071018dd;padding:8px 14px;border-radius:12px;font-size:12px;white-space:nowrap;display:none;box-shadow:0 5px 18px #0007}
+#rotate{display:none;position:fixed;inset:0;z-index:1;background:#081018f7;align-items:center;justify-content:center;text-align:center;padding:28px}.rotateBox{max-width:330px}.rotateIcon{font-size:64px;animation:tilt 1.4s infinite alternate}@keyframes tilt{to{transform:rotate(90deg)}}
+#modeBtn{position:fixed;right:14px;top:72px;z-index:8;width:76px;height:42px;border:1px solid #fff4;border-radius:13px;background:#071018dd;color:#fff;font-weight:bold}
+@media (orientation:landscape){#hud{top:7px;left:12px;right:auto;max-width:70vw;font-size:12px}#mini{right:10px;top:10px;width:118px;height:118px}.joy{left:18px;bottom:18px;width:128px;height:128px}.stick{left:35px;top:35px;width:58px;height:58px}.a{right:104px;bottom:18px}.b{right:190px;bottom:18px}.nitro{right:18px;bottom:82px}.panel{max-width:500px}.panel p{font-size:14px}}
+@media (orientation:portrait){#rotate{display:flex}}
 </style>
 </head>
 <body>
@@ -32,8 +36,10 @@ canvas{display:block;width:100vw;height:100vh}
 <div class="joy" id="joy"><div class="stick" id="stick"></div></div>
 <button class="btn a" id="act">AKSI</button>
 <button class="btn b" id="carBtn">MOBIL</button>
-<button class="btn nitro" id="nitroBtn">⚡ NITRO</button>\n<button id="modeBtn">☀️ MODE</button>
-<div id="hint"></div>\n<div id="rotate"><div class="rotateBox"><div class="rotateIcon">📱</div><h2>Putar HP ke Lanskap</h2><p>V29 dibuat untuk layar horizontal agar kota, mobil, polisi, dan minimap lebih luas.</p></div></div>
+<button class="btn nitro" id="nitroBtn">⚡ NITRO</button>
+<button id="modeBtn">☀️ MODE</button>
+<div id="hint"></div>
+<div id="rotate"><div class="rotateBox"><div class="rotateIcon">📱</div><h2>Putar HP ke Lanskap</h2><p>V29 dibuat untuk layar horizontal agar kota, mobil, polisi, dan minimap lebih luas.</p></div></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
 <p><b>V29 LANDSCAPE EDITION</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
@@ -58,7 +64,8 @@ const fuelStation={x:360,y:0};
 const shop={x:-360,y:0};
 const home={x:0,y:360};
 const garage={x:0,y:-360};
-let started=false,inCar=false,carIsNpc=false,money=1000,hp=100,wanted=0,fuel=100,clock=8;\nlet weather="Cerah",weatherTimer=0,trafficHits=0,heatTimer=0,cameraZoom=1;
+let started=false,inCar=false,carIsNpc=false,money=1000,hp=100,wanted=0,fuel=100,clock=8;
+let weather="Cerah",weatherTimer=0,trafficHits=0,heatTimer=0,cameraZoom=1;
 let carLevel=1,repairCooldown=0,level=1,xp=0,missionStreak=0;
 let joyX=0,joyY=0,pointerId=null,last=0,missionCount=0,nitro=100,nitroOn=false,score=0;
 const traffic=[],npcs=[],police=[],trees=[],lamps=[],cashDrops=[];
@@ -130,7 +137,9 @@ function showHint(t){
   const h=document.getElementById("hint");h.textContent=t;h.style.display="block";
   clearTimeout(showHint.timer);showHint.timer=setTimeout(()=>h.style.display="none",2200);
 }
-function setMission(t){document.getElementById("mission").textContent=t}\nfunction cycleMode(){const modes=["Cerah","Mendung","Hujan","Malam Kabut"];weather=modes[(modes.indexOf(weather)+1)%modes.length];showHint("🌦️ Cuaca: "+weather);saveGame()}\ndocument.getElementById("modeBtn").onclick=cycleMode;
+function setMission(t){document.getElementById("mission").textContent=t}
+function cycleMode(){const modes=["Cerah","Mendung","Hujan","Malam Kabut"];weather=modes[(modes.indexOf(weather)+1)%modes.length];showHint("🌦️ Cuaca: "+weather);saveGame()}
+document.getElementById("modeBtn").onclick=cycleMode;
 
 function toggleCar(){
   if(!started)return;
@@ -381,7 +390,10 @@ function draw(t,dt){
   drawPOI(garage,"#e1b72f","GARASI",ox,oy,"garage");
   drawCash(ox,oy);drawTraffic(ox,oy,dt);drawNPCs(ox,oy,t);drawTarget(ox,oy,t);drawPolice(ox,oy,dt,ox,oy);
   if(inCar){drawCar()}else{drawCarAt(car.x,car.y,ox,oy);drawPlayer()}
-  if(night){ctx.fillStyle="#09132a66";ctx.fillRect(0,0,W,H)}\n  if(weather==="Mendung"){ctx.fillStyle="#53606a33";ctx.fillRect(0,0,W,H)}\n  if(weather==="Hujan"){ctx.fillStyle="#4b668822";ctx.fillRect(0,0,W,H);ctx.strokeStyle="#b9d7ff66";ctx.lineWidth=1;for(let i=0;i<90;i++){const rx=(i*83+t*.18)%W,ry=(i*47+t*.31)%H;ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-5,ry+13);ctx.stroke()}}\n  if(weather==="Malam Kabut"){ctx.fillStyle="#b9c7d11c";ctx.fillRect(0,0,W,H)}
+  if(night){ctx.fillStyle="#09132a66";ctx.fillRect(0,0,W,H)}
+  if(weather==="Mendung"){ctx.fillStyle="#53606a33";ctx.fillRect(0,0,W,H)}
+  if(weather==="Hujan"){ctx.fillStyle="#4b668822";ctx.fillRect(0,0,W,H);ctx.strokeStyle="#b9d7ff66";ctx.lineWidth=1;for(let i=0;i<90;i++){const rx=(i*83+t*.18)%W,ry=(i*47+t*.31)%H;ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-5,ry+13);ctx.stroke()}}
+  if(weather==="Malam Kabut"){ctx.fillStyle="#b9c7d11c";ctx.fillRect(0,0,W,H)}
   drawMini(ox,oy);
   document.getElementById("money").textContent=money;
   document.getElementById("level").textContent=level;
@@ -393,7 +405,9 @@ function draw(t,dt){
 }
 
 function update(dt){
-  clock=(clock+dt*.22)%24;\n  weatherTimer+=dt;if(weatherTimer>90){weatherTimer=0;const modes=["Cerah","Mendung","Hujan","Malam Kabut"];weather=modes[Math.floor(Math.random()*modes.length)];showHint("🌦️ Cuaca berubah: "+weather)}\n  heatTimer=Math.max(0,heatTimer-dt);
+  clock=(clock+dt*.22)%24;
+  weatherTimer+=dt;if(weatherTimer>90){weatherTimer=0;const modes=["Cerah","Mendung","Hujan","Malam Kabut"];weather=modes[Math.floor(Math.random()*modes.length)];showHint("🌦️ Cuaca berubah: "+weather)}
+  heatTimer=Math.max(0,heatTimer-dt);
   const dx=joyX,dy=joyY;
   if(wanted>0&&missionCount>0&&Math.random()<dt*.025){wanted=Math.max(0,wanted-1);if(wanted===0)police.length=0;}
   if(Math.random()<dt*.18)saveGame();
