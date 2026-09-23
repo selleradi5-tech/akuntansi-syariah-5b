@@ -19,7 +19,7 @@ canvas{display:block;width:100vw;height:100vh}
 .joy{position:fixed;z-index:8;left:14px;bottom:16px;width:142px;height:142px;border:2px solid #fff3;border-radius:50%;background:#ffffff0b}
 .stick{position:absolute;left:40px;top:40px;width:58px;height:58px;border-radius:50%;background:#ffffff38}
 #mini{position:fixed;right:9px;top:72px;width:112px;height:112px;z-index:6;border:2px solid #ffffff66;border-radius:12px;background:#142019dd}
-#hint{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:7;background:#071018dd;padding:8px 14px;border-radius:12px;font-size:12px;white-space:nowrap;display:none;box-shadow:0 5px 18px #0007}\n#rotate{display:none;position:fixed;inset:0;z-index:50;background:#081018f7;align-items:center;justify-content:center;text-align:center;padding:28px}.rotateBox{max-width:330px}.rotateIcon{font-size:64px;animation:tilt 1.4s infinite alternate}@keyframes tilt{to{transform:rotate(90deg)}}\n#modeBtn{position:fixed;right:14px;top:72px;z-index:8;width:76px;height:42px;border:1px solid #fff4;border-radius:13px;background:#071018dd;color:#fff;font-weight:bold}\n@media (orientation:landscape){#hud{top:7px;left:12px;right:auto;max-width:70vw;font-size:12px}#mini{right:10px;top:10px;width:118px;height:118px}.joy{left:18px;bottom:18px;width:128px;height:128px}.stick{left:35px;top:35px;width:58px;height:58px}.a{right:104px;bottom:18px}.b{right:190px;bottom:18px}.nitro{right:18px;bottom:82px}.panel{max-width:500px}.panel p{font-size:14px}}\n@media (orientation:portrait){#rotate{display:flex}}
+#hint{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:7;background:#071018dd;padding:8px 14px;border-radius:12px;font-size:12px;white-space:nowrap;display:none;box-shadow:0 5px 18px #0007}\n#rotate{display:none;position:fixed;inset:0;z-index:10;background:#081018f7;align-items:center;justify-content:center;text-align:center;padding:28px}.rotateBox{max-width:330px}.rotateIcon{font-size:64px;animation:tilt 1.4s infinite alternate}@keyframes tilt{to{transform:rotate(90deg)}}\n#modeBtn{position:fixed;right:14px;top:72px;z-index:8;width:76px;height:42px;border:1px solid #fff4;border-radius:13px;background:#071018dd;color:#fff;font-weight:bold}\n@media (orientation:landscape){#hud{top:7px;left:12px;right:auto;max-width:70vw;font-size:12px}#mini{right:10px;top:10px;width:118px;height:118px}.joy{left:18px;bottom:18px;width:128px;height:128px}.stick{left:35px;top:35px;width:58px;height:58px}.a{right:104px;bottom:18px}.b{right:190px;bottom:18px}.nitro{right:18px;bottom:82px}.panel{max-width:500px}.panel p{font-size:14px}}\n@media (orientation:portrait){#rotate{display:flex}}
 </style>
 </head>
 <body>
@@ -196,7 +196,7 @@ document.getElementById("nitroBtn").onpointerdown=()=>{if(started&&inCar&&nitro>
 document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").onclick=()=>{
-  loadGame();started=true;document.getElementById("start").style.display="none";
+  loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
   last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V29 Landscape aktif • putar HP horizontal untuk area bermain lebih luas");
 };
 
