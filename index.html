@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V29.1 • Landscape Edition</title>
+<title>Open City V30 • Living City</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -29,7 +29,7 @@ canvas{display:block;width:100vw;height:100vh}
 <body>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V29 • LANDSCAPE</b><br>
+<div id="hud">🌆 <b>OPEN CITY V30 • LIVING CITY</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -175,7 +175,7 @@ function completeMission(){
   const kinds=["Antar paket","Kejar checkpoint","Kunjungi lokasi","Jelajahi distrik"];
   setMission(kinds[missionCount%kinds.length]+" selesai! +$"+reward+" • Streak "+missionStreak+". Tujuan berikutnya.");
   police.length=0;
-  for(let i=0;i<wanted;i++)police.push({x:Math.round((target.x+220+i*55)/grid)*grid,y:Math.round((target.y-220-i*35)/grid)*grid,a:0});
+  for(let i=0;i<wanted;i++){const sr=snapRoad(target.x+220+i*55,target.y-220-i*35);police.push({x:sr.x,y:sr.y,a:sr.a});}
   showHint("MISI SELESAI +$"+reward+" • XP +100 • Lv."+level+(level>oldLevel?" • LEVEL UP +$500":""));
 }
 function action(){
@@ -207,7 +207,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V29.1 siap dimainkan • mode landscape opsional");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V30 Living City siap dimainkan • mode landscape opsional");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -288,11 +288,56 @@ function drawCash(cx,cy){
     ctx.fillStyle="#08261a";ctx.font="bold 10px Arial";ctx.textAlign="center";ctx.fillText("$",sx,sy+4);
   }
 }
-function drawTraffic(cx,cy,dt){
+function trafficAtIntersection(v){
+  return Math.abs(((v.x%grid)+grid)%grid)<roadW/2 && Math.abs(((v.y%grid)+grid)%grid)<roadW/2;
+}
+function trafficAhead(v){
+  const ux=Math.cos(v.a),uy=Math.sin(v.a);
+  let gap=999;
+  for(const o of traffic){
+    if(o===v)continue;
+    const dx=o.x-v.x,dy=o.y-v.y,front=dx*ux+dy*uy,side=Math.abs(dx*uy-dy*ux);
+    if(front>0&&front<75&&side<24)gap=Math.min(gap,front);
+  }
+  if(inCar){
+    const dx=car.x-v.x,dy=car.y-v.y,front=dx*ux+dy*uy,side=Math.abs(dx*uy-dy*ux);
+    if(front>0&&front<75&&side<28)gap=Math.min(gap,front);
+  }
+  return gap;
+}
+function trafficSignalRed(v,t){
+  if(!trafficAtIntersection(v))return false;
+  const phase=((t/1000)%12);
+  const horizontal=Math.abs(Math.sin(v.a))<.5;
+  return horizontal ? phase>=6 : phase<6;
+}
+function chooseTrafficTurn(v){
+  const r=Math.random();
+  if(r<.18)v.a+=Math.PI/2;
+  else if(r>0.82)v.a-=Math.PI/2;
+  v.a=Math.atan2(Math.sin(v.a),Math.cos(v.a));
+}
+function updateTraffic(v,dt,t){
+  if(!Number.isFinite(v.nextTurn))v.nextTurn=0;
+  if(!Number.isFinite(v.lastGX))v.lastGX=Math.round(v.x/grid);
+  if(!Number.isFinite(v.lastGY))v.lastGY=Math.round(v.y/grid);
+  const gx=Math.round(v.x/grid),gy=Math.round(v.y/grid);
+  if((gx!==v.lastGX||gy!==v.lastGY)&&trafficAtIntersection(v)){
+    v.lastGX=gx;v.lastGY=gy;
+    if(performance.now()>v.nextTurn){chooseTrafficTurn(v);v.nextTurn=performance.now()+1600;}
+  }
+  const red=trafficSignalRed(v,t);
+  const gap=trafficAhead(v);
+  const braking=red||gap<34;
+  const target=braking?0:v.s;
+  v.speed+=(target-v.speed)*Math.min(1,dt*(braking?8:2.5));
+  v.x+=Math.cos(v.a)*v.speed*dt;v.y+=Math.sin(v.a)*v.speed*dt;
+  if(v.x>world+150)v.x=-world-150;if(v.x<-world-150)v.x=world+150;
+  if(v.y>world+150)v.y=-world-150;if(v.y<-world-150)v.y=world+150;
+}
+function drawTraffic(cx,cy,dt,t){
   for(const v of traffic){
-    v.x+=Math.cos(v.a)*v.s*dt;v.y+=Math.sin(v.a)*v.s*dt;
-    if(v.x>world+150)v.x=-world-150;if(v.x<-world-150)v.x=world+150;
-    if(v.y>world+150)v.y=-world-150;if(v.y<-world-150)v.y=world+150;
+    updateTraffic(v,dt,t);
     const [sx,sy]=worldToScreen(v.x,v.y,cx,cy);
     ctx.save();ctx.translate(sx,sy);ctx.rotate(v.a);
     const w=v.w||MAIN_CAR.w,h=v.h||MAIN_CAR.h;
@@ -343,26 +388,40 @@ function snapRoad(x,y){
   if(Math.abs(x-rx)<=Math.abs(y-ry)) return {x:rx,y:clamp(y,-world,world),a:0};
   return {x:clamp(x,-world,world),y:ry,a:Math.PI/2};
 }
+function policeAhead(q){
+  const ux=Math.cos(q.a),uy=Math.sin(q.a);let gap=999;
+  for(const o of police){
+    if(o===q)continue;
+    const dx=o.x-q.x,dy=o.y-q.y,front=dx*ux+dy*uy,side=Math.abs(dx*uy-dy*ux);
+    if(front>0&&front<70&&side<24)gap=Math.min(gap,front);
+  }
+  for(const v of traffic){
+    const dx=v.x-q.x,dy=v.y-q.y,front=dx*ux+dy*uy,side=Math.abs(dx*uy-dy*ux);
+    if(front>0&&front<65&&side<28)gap=Math.min(gap,front);
+  }
+  return gap;
+}
 function drawPolice(cx,cy,dt,ox,oy){
   for(const q of police){
-    const d=dist(q.x,q.y,ox,oy),spd=d>100?72:55;
+    const d=dist(q.x,q.y,ox,oy),spd=d>140?82:58;
     if(!Number.isFinite(q.a))q.a=0;
     if(!isRoad(q.x,q.y)){const r=snapRoad(q.x,q.y);q.x=r.x;q.y=r.y;q.a=r.a}
+    const at=trafficAtIntersection(q);
     if(d>45){
-      const horizontal=Math.abs(Math.sin(q.a))<.5;
-      const onIntersection=roadX(q.x)&&roadY(q.y);
-      if(onIntersection){
+      if(at){
         const dx=ox-q.x,dy=oy-q.y;
         if(Math.abs(dx)>Math.abs(dy))q.a=dx>=0?0:Math.PI;
         else q.a=dy>=0?Math.PI/2:-Math.PI/2;
-      }else if(horizontal){
+      }else if(Math.abs(Math.sin(q.a))<.5){
         q.a=q.a===0||q.a===Math.PI?q.a:(ox>=q.x?0:Math.PI);
       }else{
         q.a=q.a===Math.PI/2||q.a===-Math.PI/2?q.a:(oy>=q.y?Math.PI/2:-Math.PI/2);
       }
-      q.x+=Math.cos(q.a)*spd*dt;q.y+=Math.sin(q.a)*spd*dt;
-      if(Math.abs((q.x%grid+grid)%grid)>grid-roadW/2 && Math.abs((q.x%grid+grid)%grid)<roadW/2+2)q.x=Math.round(q.x/grid)*grid;
-      if(Math.abs((q.y%grid+grid)%grid)>grid-roadW/2 && Math.abs((q.y%grid+grid)%grid)<roadW/2+2)q.y=Math.round(q.y/grid)*grid;
+      const gap=policeAhead(q);
+      const red=trafficSignalRed({x:q.x,y:q.y,a:q.a},performance.now());
+      const speed=(gap<36||red)?0:spd;
+      q.x+=Math.cos(q.a)*speed*dt;q.y+=Math.sin(q.a)*speed*dt;
+      q.x=clamp(q.x,-world,world);q.y=clamp(q.y,-world,world);
     }
     if(d<42){hp=clamp(hp-.018,0,100);wanted=clamp(wanted,0,5)}
     const [sx,sy]=worldToScreen(q.x,q.y,cx,cy);
@@ -402,7 +461,7 @@ function draw(t,dt){
   drawPOI(shop,"#a855d8","TOKO",ox,oy,"shop");
   drawPOI(home,"#df6959","SAFEHOUSE",ox,oy,"home");
   drawPOI(garage,"#e1b72f","GARASI",ox,oy,"garage");
-  drawCash(ox,oy);drawTraffic(ox,oy,dt);drawNPCs(ox,oy,t);drawTarget(ox,oy,t);drawPolice(ox,oy,dt,ox,oy);
+  drawCash(ox,oy);drawTraffic(ox,oy,dt,t);drawNPCs(ox,oy,t);drawTarget(ox,oy,t);drawPolice(ox,oy,dt,ox,oy);
   if(inCar){drawCar()}else{drawCarAt(car.x,car.y,ox,oy);drawPlayer()}
   if(night){ctx.fillStyle="#09132a66";ctx.fillRect(0,0,W,H)}
   if(weather==="Mendung"){ctx.fillStyle="#53606a33";ctx.fillRect(0,0,W,H)}
@@ -454,16 +513,16 @@ function update(dt){
   }
   repairCooldown=Math.max(0,repairCooldown-dt);
   if(wanted>0&&Math.random()<dt*.08&&police.length<wanted){
-    police.push({x:(inCar?car.x:p.x)+450,y:(inCar?car.y:p.y)-350});
+    const bx=inCar?car.x:p.x,by=inCar?car.y:p.y;const sr=snapRoad(bx+450,by-350);police.push({x:sr.x,y:sr.y,a:sr.a});
   }
   if(hp<=0){hp=100;money=Math.max(0,money-200);wanted=0;police.length=0;p.x=home.x;p.y=home.y;inCar=false;setMission("Kamu dibawa ke safehouse. -$200");saveGame();}
 }
 
 function saveGame(){
-  try{localStorage.setItem("openCityV28",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
+  try{localStorage.setItem("openCityV30",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
 }
 function loadGame(){
-  try{const d=JSON.parse(localStorage.getItem("openCityV29")||localStorage.getItem("openCityV28")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
+  try{const d=JSON.parse(localStorage.getItem("openCityV29")||localStorage.getItem("openCityV30")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
     money=Number.isFinite(d.money)?d.money:money;hp=Number.isFinite(d.hp)?d.hp:hp;wanted=Number.isFinite(d.wanted)?d.wanted:wanted;fuel=Number.isFinite(d.fuel)?d.fuel:fuel;clock=Number.isFinite(d.clock)?d.clock:clock;missionCount=Number.isFinite(d.missionCount)?d.missionCount:missionCount;nitro=Number.isFinite(d.nitro)?d.nitro:nitro;score=Number.isFinite(d.score)?d.score:score;trafficHits=Number.isFinite(d.trafficHits)?d.trafficHits:0;weather=typeof d.weather==="string"?d.weather:weather;xp=Number.isFinite(d.xp)?d.xp:missionCount*100;level=Math.max(1,Number.isFinite(d.level)?d.level:Math.floor(xp/300)+1);missionStreak=Number.isFinite(d.missionStreak)?d.missionStreak:0;carLevel=clamp(Number(d.carLevel)||1,1,5);car.x=Number.isFinite(d.carX)?d.carX:car.x;car.y=Number.isFinite(d.carY)?d.carY:car.y;car.a=Number.isFinite(d.carA)?d.carA:car.a;car.color=typeof d.carColor==="string"?d.carColor:car.color;car.w=Number.isFinite(d.carW)?d.carW:car.w;car.h=Number.isFinite(d.carH)?d.carH:car.h;
     if(Array.isArray(d.cashDrops))cashDrops.forEach((x,i)=>x.got=!!d.cashDrops[i]);
     if(blocked(car.x,car.y)){car.x=Math.round(car.x/grid)*grid;car.y=Math.round(car.y/grid)*grid;car.speed=0}
