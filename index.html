@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V35.0 • Realistic Driving</title>
+<title>Open City V35.1 • Realistic Driving</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -31,7 +31,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="threeLoading" style="position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#071018ee;color:#fff;font-weight:bold;font-size:18px">Memuat kota 3D ringan...</div>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V35.0 • DRIVE BUTTONS</b><br>
+<div id="hud">🌆 <b>OPEN CITY V35.1 • DRIVE BUTTONS</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -44,7 +44,7 @@ canvas{display:block;width:100vw;height:100vh}
 <div id="rotate"><div class="rotateBox"><div class="rotateIcon">📱</div><h2>Putar HP ke Lanskap</h2><p>V29 dibuat untuk layar horizontal agar kota, mobil, polisi, dan minimap lebih luas.</p></div></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
-<p><b>V35.0 3D CONTROLS</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
+<p><b>V35.1 3D CONTROLS</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 
@@ -252,7 +252,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V35.0 • joystick/D-pad untuk jalan • GAS untuk mobil");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V35.1 • joystick/D-pad untuk jalan • GAS untuk mobil");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -683,6 +683,8 @@ async function ensureThree(){
   }catch(e){return false}
 }
 let threeStarted=false,scene,camera,renderer,worldGroup,player3D,car3D,animId;
+let traffic3D=[],npcs3D=[];
+let threeRetry=0;
 
 function makeMat(color,rough=.8){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:.05})}
 function box(w,h,d,color){
@@ -714,10 +716,18 @@ function fail3D(msg){
   window.city3DActive=false;
   if(renderer){try{renderer.dispose()}catch(e){} renderer=null}
   const r=document.getElementById("city3d");if(r)r.remove();
+  traffic3D=[];npcs3D=[];
+  overlay.style.display="flex";
+  overlay.textContent="Mencoba memulihkan 3D...";
+  if(threeRetry<2){
+    threeRetry++;
+    setTimeout(()=>init3D(),350*threeRetry);
+    return;
+  }
   oldCanvas.style.display="block";
   mini.style.display="block";
   overlay.style.display="none";
-  showHint("⚠️ 3D tidak tersedia di browser ini • mode ringan 2D aktif");
+  showHint("⚠️ 3D gagal dimuat setelah beberapa percobaan • mode 2D digunakan");
   requestAnimationFrame(loop);
 }
 async function init3D(){
@@ -726,6 +736,7 @@ async function init3D(){
     const ready=await ensureThree();
     if(!ready)throw new Error("THREE tidak tersedia");
     threeStarted=true;
+    threeRetry=0;
     overlay.style.display="flex";overlay.textContent="Membangun kota 3D...";
     oldCanvas.style.display="none";mini.style.display="none";
     scene=new THREE.Scene();
@@ -733,13 +744,14 @@ async function init3D(){
     scene.fog=new THREE.Fog("#79a8d0",180,1500);
     camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,5000);
     camera.position.set(0,8,12);
-    renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:"high-performance"});
+    renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:"default",preserveDrawingBuffer:false});
     renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1));
     renderer.setSize(innerWidth,innerHeight,false);
     renderer.domElement.id="city3d";
     renderer.domElement.style.cssText="position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:1;pointer-events:none";
     renderer.shadowMap.enabled=false;
     document.body.insertBefore(renderer.domElement,document.body.firstChild);
+    renderer.domElement.addEventListener("webglcontextlost",e=>{e.preventDefault();fail3D("context lost")},{passive:false});
 
     worldGroup=new THREE.Group();scene.add(worldGroup);
     scene.add(new THREE.HemisphereLight(0xbfe5ff,0x28452c,1.5));
@@ -780,6 +792,7 @@ async function init3D(){
     if(st){car3D.position.set(st.car.x,.1,st.car.y);player3D.position.set(st.p.x,.85,st.p.y)}
     overlay.style.display="none";
     window.city3DActive=true;
+    overlay.style.display="none";
     resize3D();
     animId=requestAnimationFrame(render3D);
   }catch(err){
