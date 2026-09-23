@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open City V27</title>
+<title>Open City V28</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;overflow:hidden;background:#152019;font-family:Arial,sans-serif;color:#fff;touch-action:none}
@@ -25,7 +25,7 @@ canvas{display:block;width:100vw;height:100vh}
 <body>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V27</b><br>
+<div id="hud">🌆 <b>OPEN CITY V28</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
@@ -57,7 +57,7 @@ const fuelStation={x:360,y:0};
 const shop={x:-360,y:0};
 const home={x:0,y:360};
 const garage={x:0,y:-360};
-let started=false,inCar=false,money=1000,hp=100,wanted=0,fuel=100,clock=8;
+let started=false,inCar=false,carIsNpc=false,money=1000,hp=100,wanted=0,fuel=100,clock=8;
 let carLevel=1,repairCooldown=0,level=1,xp=0,missionStreak=0;
 let joyX=0,joyY=0,pointerId=null,last=0,missionCount=0,nitro=100,nitroOn=false,score=0;
 const traffic=[],npcs=[],police=[],trees=[],lamps=[],cashDrops=[];
@@ -149,12 +149,12 @@ function toggleCar(){
   if(best.type==="traffic"){
     const v=traffic.splice(best.i,1)[0];
     car.x=v.x;car.y=v.y;car.a=v.a;car.speed=0;car.color=v.color||"#d95454";car.w=v.w||48;car.h=v.h||26;
-    showHint("🚗 Mobil NPC sekarang jadi mobilmu");
+    carIsNpc=true;showHint("🚗 Mobil NPC sekarang jadi mobilmu");
   }else{
     car.speed=0;
     showHint("🚗 Mobil utama berhasil dinaiki!");
   }
-  inCar=true;p.x=car.x;p.y=car.y;
+  inCar=true;p.x=car.x;p.y=car.y;document.getElementById("carBtn").textContent="KELUAR MOBIL";
 }
 
 function completeMission(){
@@ -195,7 +195,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").onclick=()=>{
   loadGame();started=true;document.getElementById("start").style.display="none";
-  last=performance.now();showHint("V27 aktif • warna & ukuran mobil NPC dipertahankan");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V28 aktif • mobil NPC mempertahankan tampilan + polisi mengikuti jalan");
 };
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -419,10 +419,10 @@ function update(dt){
 }
 
 function saveGame(){
-  try{localStorage.setItem("openCityV27",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
+  try{localStorage.setItem("openCityV28",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
 }
 function loadGame(){
-  try{const d=JSON.parse(localStorage.getItem("openCityV27")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
+  try{const d=JSON.parse(localStorage.getItem("openCityV28")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
     money=Number.isFinite(d.money)?d.money:money;hp=Number.isFinite(d.hp)?d.hp:hp;wanted=Number.isFinite(d.wanted)?d.wanted:wanted;fuel=Number.isFinite(d.fuel)?d.fuel:fuel;clock=Number.isFinite(d.clock)?d.clock:clock;missionCount=Number.isFinite(d.missionCount)?d.missionCount:missionCount;nitro=Number.isFinite(d.nitro)?d.nitro:nitro;score=Number.isFinite(d.score)?d.score:score;xp=Number.isFinite(d.xp)?d.xp:missionCount*100;level=Math.max(1,Number.isFinite(d.level)?d.level:Math.floor(xp/300)+1);missionStreak=Number.isFinite(d.missionStreak)?d.missionStreak:0;carLevel=clamp(Number(d.carLevel)||1,1,5);car.x=Number.isFinite(d.carX)?d.carX:car.x;car.y=Number.isFinite(d.carY)?d.carY:car.y;car.a=Number.isFinite(d.carA)?d.carA:car.a;car.color=typeof d.carColor==="string"?d.carColor:car.color;car.w=Number.isFinite(d.carW)?d.carW:car.w;car.h=Number.isFinite(d.carH)?d.carH:car.h;
     if(Array.isArray(d.cashDrops))cashDrops.forEach((x,i)=>x.got=!!d.cashDrops[i]);
     if(blocked(car.x,car.y)){car.x=Math.round(car.x/grid)*grid;car.y=Math.round(car.y/grid)*grid;car.speed=0}
