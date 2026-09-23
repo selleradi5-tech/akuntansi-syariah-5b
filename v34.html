@@ -15,35 +15,36 @@ canvas{display:block;width:100vw;height:100vh}
 .panel h1{margin:0 0 8px;font-size:31px}.panel p{color:#cbd5dc;line-height:1.5}
 .play{width:100%;height:58px;border:0;border-radius:15px;background:#29aa68;color:#fff;font-size:18px;font-weight:bold}
 .btn{position:fixed;z-index:8;width:76px;height:54px;border:1px solid #fff4;border-radius:15px;background:#071018dd;color:#fff;font-weight:bold;box-shadow:0 5px 15px #0005}
-.a{right:14px;bottom:88px}.b{right:98px;bottom:18px}.nitro{right:14px;bottom:18px;width:76px;height:48px;background:#b24a24dd}
+.a{right:18px;bottom:150px}.b{right:102px;bottom:150px}.nitro{right:18px;bottom:82px;width:76px;height:48px;background:#b24a24dd}
 .joy{position:fixed;z-index:8;left:14px;bottom:16px;width:142px;height:142px;border:2px solid #fff3;border-radius:50%;background:#ffffff0b}
 .stick{position:absolute;left:40px;top:40px;width:58px;height:58px;border-radius:50%;background:#ffffff38}
 #mini{position:fixed;right:9px;top:72px;width:112px;height:112px;z-index:6;border:2px solid #ffffff66;border-radius:12px;background:#142019dd}
 #hint{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:7;background:#071018dd;padding:8px 14px;border-radius:12px;font-size:12px;white-space:nowrap;display:none;box-shadow:0 5px 18px #0007}
 #rotate{display:none;position:fixed;inset:0;z-index:1;background:#081018f7;align-items:center;justify-content:center;text-align:center;padding:28px}.rotateBox{max-width:330px}.rotateIcon{font-size:64px;animation:tilt 1.4s infinite alternate}@keyframes tilt{to{transform:rotate(90deg)}}
 #modeBtn{position:fixed;right:14px;top:72px;z-index:8;width:76px;height:42px;border:1px solid #fff4;border-radius:13px;background:#071018dd;color:#fff;font-weight:bold}
-@media (orientation:landscape){#hud{top:7px;left:12px;right:auto;max-width:70vw;font-size:12px}#mini{right:10px;top:10px;width:118px;height:118px}.joy{left:18px;bottom:18px;width:128px;height:128px}.stick{left:35px;top:35px;width:58px;height:58px}.a{right:104px;bottom:18px}.b{right:190px;bottom:18px}.nitro{right:18px;bottom:82px}.panel{max-width:500px}.panel p{font-size:14px}}
+@media (orientation:landscape){#hud{top:7px;left:12px;right:auto;max-width:70vw;font-size:12px}#mini{right:10px;top:10px;width:118px;height:118px}.joy{left:18px;bottom:18px;width:128px;height:128px}.stick{left:35px;top:35px;width:58px;height:58px}.a{right:18px;bottom:150px}.b{right:102px;bottom:150px}.nitro{right:18px;bottom:82px}.panel{max-width:500px}.panel p{font-size:14px}}
 @media (orientation:portrait){#rotate{display:flex}}
-.driveBtn{position:fixed;z-index:9;bottom:18px;width:72px;height:62px;border:1px solid #fff5;border-radius:16px;background:#071018dd;color:#fff;font-weight:bold;font-size:18px;touch-action:none;user-select:none;-webkit-user-select:none}.driveGas{right:18px;background:#16804ddd}.driveLeft{right:180px}.driveRight{right:96px}</style>
+.driveBtn{position:fixed;z-index:9;bottom:18px;width:72px;height:62px;border:1px solid #fff5;border-radius:16px;background:#071018dd;color:#fff;font-weight:bold;font-size:18px;touch-action:none;user-select:none;-webkit-user-select:none}.driveGas{right:18px;background:#16804ddd}.driveLeft{right:180px}.driveRight{right:96px}
+.walkBtn{position:fixed;z-index:9;width:42px;height:42px;border:1px solid #fff5;border-radius:11px;background:#071018dd;color:#fff;font-weight:bold;font-size:17px;touch-action:none;user-select:none;-webkit-user-select:none}.walkUp{left:203px;bottom:66px}.walkDown{left:203px;bottom:18px}.walkLeft{left:155px;bottom:18px}.walkRight{left:251px;bottom:18px}</style>
 </head>
 <body>
 <div id="threeLoading" style="position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#071018ee;color:#fff;font-weight:bold;font-size:18px">Memuat kota 3D ringan...</div>
 <canvas id="c"></canvas>
 <canvas id="mini"></canvas>
-<div id="hud">🌆 <b>OPEN CITY V34.7 • DRIVE BUTTONS</b><br>
+<div id="hud">🌆 <b>OPEN CITY V34.8 • DRIVE BUTTONS</b><br>
 💵 $<span id="money">1000</span> &nbsp; ❤️ <span id="hp">100</span> &nbsp; 🚨 <span id="wanted">☆☆☆☆☆</span> &nbsp; 🏆 Lv.<span id="level">1</span> <span id="xpText">0/300 XP</span><br>
 <span id="mission">Misi: temui titik kuning</span><br>
 <span id="status">⛽ 100% &nbsp; 🕐 08:00 &nbsp; 🏎️ 0 km/h</span></div>
 <div class="joy" id="joy"><div class="stick" id="stick"></div></div>
 <button class="btn a" id="act">AKSI</button>
 <button class="btn b" id="carBtn">MOBIL</button>
-<button class="btn nitro" id="nitroBtn">⚡ NITRO</button><button class="driveBtn driveLeft" id="driveLeft">◀</button><button class="driveBtn driveRight" id="driveRight">▶</button><button class="driveBtn driveGas" id="driveGas">GAS</button>
+<button class="btn nitro" id="nitroBtn">⚡ NITRO</button><button class="walkBtn walkUp" id="walkUp">▲</button><button class="walkBtn walkDown" id="walkDown">▼</button><button class="walkBtn walkLeft" id="walkLeft">◀</button><button class="walkBtn walkRight" id="walkRight">▶</button><button class="driveBtn driveLeft" id="driveLeft">◀</button><button class="driveBtn driveRight" id="driveRight">▶</button><button class="driveBtn driveGas" id="driveGas">GAS</button>
 <button id="modeBtn">☀️ MODE</button>
 <div id="hint"></div>
 <div id="rotate"><div class="rotateBox"><div class="rotateIcon">📱</div><h2>Putar HP ke Lanskap</h2><p>V29 dibuat untuk layar horizontal agar kota, mobil, polisi, dan minimap lebih luas.</p></div></div>
 <div id="start"><div class="panel">
 <h1>🌆 OPEN CITY</h1>
-<p><b>V34.7 3D DRIVE</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
+<p><b>V34.8 3D CONTROLS</b><br>Layar lanskap baru + kamera luas, cuaca dinamis, siklus siang-malam, traffic & NPC, mobil NPC yang bisa dipakai, polisi mengikuti jalan, misi berantai, XP/level, streak, cash pickup, garasi upgrade, repair, nitro, SPBU, toko, safehouse, minimap, save/load dan kontrol sentuh.</p>
 <button class="play" id="play">▶ MULAI GAME</button>
 </div></div>
 
@@ -139,6 +140,15 @@ function pointerJoy(e){
   document.getElementById("stick").style.transform="translate("+dx+"px,"+dy+"px)";
 }
 let driveGas=false,driveLeft=false,driveRight=false;
+let walkUp=false,walkDown=false,walkLeft=false,walkRight=false;
+function bindWalk(id,key){
+  const el=document.getElementById(id);if(!el)return;
+  const set=v=>{if(key==="walkUp")walkUp=v;else if(key==="walkDown")walkDown=v;else if(key==="walkLeft")walkLeft=v;else if(key==="walkRight")walkRight=v};
+  const down=e=>{e.preventDefault();set(true)};const up=e=>{e.preventDefault();set(false)};
+  el.addEventListener("pointerdown",down);el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);el.addEventListener("pointerleave",up);
+  el.addEventListener("touchstart",down,{passive:false});el.addEventListener("touchend",up,{passive:false});el.addEventListener("touchcancel",up,{passive:false});
+}
+bindWalk("walkUp","walkUp");bindWalk("walkDown","walkDown");bindWalk("walkLeft","walkLeft");bindWalk("walkRight","walkRight");
 function syncDrive(){
   if(!started||!inCar)return;
   joyY=driveGas?-1:0;
@@ -242,7 +252,7 @@ document.getElementById("nitroBtn").onpointerup=()=>nitroOn=false;
 document.getElementById("nitroBtn").onpointercancel=()=>nitroOn=false;
 document.getElementById("play").addEventListener("click",function(){
   loadGame();started=true;document.getElementById("start").style.display="none";document.getElementById("rotate").style.display="none";
-  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V34.7 • tahan GAS untuk jalan");
+  last=performance.now();document.getElementById("carBtn").textContent="MASUK MOBIL";showHint("V34.8 • joystick/D-pad untuk jalan • GAS untuk mobil");
 });
 
 function worldToScreen(wx,wy,cx,cy){return [wx-cx+W/2,wy-cy+H/2]}
@@ -594,7 +604,12 @@ function update(dt){
       }
     }else car.speed*=.9;
   }else{
-    moveEntity(p,dx*175*dt,dy*175*dt);
+    const wx=(walkRight?1:0)-(walkLeft?1:0);
+    const wy=(walkDown?1:0)-(walkUp?1:0);
+    const mdx=Math.abs(wx)+Math.abs(wy)>0?wx:dx;
+    const mdy=Math.abs(wx)+Math.abs(wy)>0?wy:dy;
+    const mag=Math.hypot(mdx,mdy);
+    if(mag>.05)moveEntity(p,(mdx/mag)*175*dt,(mdy/mag)*175*dt);
   }
   repairCooldown=Math.max(0,repairCooldown-dt);
   if(wanted>0&&Math.random()<dt*.08&&police.length<wanted){
@@ -604,7 +619,7 @@ function update(dt){
 }
 
 function saveGame(){
-  try{localStorage.setItem("openCityV34_1",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
+  try{localStorage.setItem("openCityV34_8",JSON.stringify({money,hp,wanted,fuel,clock,missionCount,nitro,score,carLevel,level,xp,missionStreak,carX:car.x,carY:car.y,carA:car.a,carColor:car.color,carW:car.w,carH:car.h,cashDrops:cashDrops.map(d=>d.got)}))}catch(e){}
 }
 function loadGame(){
   try{const d=JSON.parse(localStorage.getItem("openCityV33")||localStorage.getItem("openCityV32")||localStorage.getItem("openCityV29")||localStorage.getItem("openCityV26")||localStorage.getItem("openCityV25")||localStorage.getItem("openCityV21")||localStorage.getItem("openCityV20")||localStorage.getItem("openCityV19")||"null");if(!d)return;
