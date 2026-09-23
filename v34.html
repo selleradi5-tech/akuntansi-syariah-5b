@@ -50,7 +50,8 @@ canvas{display:block;width:100vw;height:100vh}
 <script>
 (()=> {
 "use strict";
-const canvas=document.getElementById("c"),ctx=canvas.getContext("2d");\nwindow.city3DActive=false;
+const canvas=document.getElementById("c"),ctx=canvas.getContext("2d");
+window.city3DActive=false;
 const mini=document.getElementById("mini"),mx=mini.getContext("2d");
 let W=innerWidth,H=innerHeight;
 function resize(){W=innerWidth;H=innerHeight;canvas.width=W;canvas.height=H}
@@ -592,7 +593,8 @@ function loadGame(){
 function loop(t){
   if(started){
     const dt=Math.min(.035,Math.max(.001,(t-last)/1000));last=t;
-    update(dt);draw(t,dt);
+    update(dt);
+    if(!window.city3DActive)draw(t,dt);
   }
   requestAnimationFrame(loop);
 }
@@ -665,6 +667,7 @@ function carMesh(color="#d74343"){
 function fail3D(msg){
   if(animId)cancelAnimationFrame(animId);
   threeStarted=false;
+  window.city3DActive=false;
   if(renderer){try{renderer.dispose()}catch(e){}}
   overlay.style.display="flex";overlay.textContent=msg;
   setTimeout(()=>{overlay.style.display="none"},2200);
@@ -687,8 +690,7 @@ async function init3D(){
     renderer.setSize(innerWidth,innerHeight,false);
     renderer.domElement.id="city3d";
     renderer.domElement.style.cssText="position:fixed;inset:0;width:100vw;height:100vh;display:block;z-index:1;pointer-events:none";
-    renderer.shadowMap.enabled=true;
-    renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+    renderer.shadowMap.enabled=false;
     document.body.insertBefore(renderer.domElement,document.body.firstChild);
 
     worldGroup=new THREE.Group();scene.add(worldGroup);
@@ -719,6 +721,7 @@ async function init3D(){
     const st=window.openCityState;
     if(st){car3D.position.set(st.car.x,.1,st.car.y);player3D.position.set(st.p.x,.85,st.p.y)}
     overlay.style.display="none";
+    window.city3DActive=true;
     resize3D();
     animId=requestAnimationFrame(render3D);
   }catch(err){
