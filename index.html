@@ -549,7 +549,7 @@ function drawMini(cx,cy){
 
 function draw(t,dt){
   const ox=inCar?car.x:p.x,oy=inCar?car.y:p.y;
-  const night=st.clock<6||st.clock>18;
+  const night=clock<6||clock>18;
   ctx.fillStyle=night?"#172642":"#6a9d5d";ctx.fillRect(0,0,W,H);
   drawRoads(ox,oy);drawCity(ox,oy);drawTrafficLights(ox,oy,t);
   drawPOI(fuelStation,"#39bf70","SPBU",ox,oy,"pump");
