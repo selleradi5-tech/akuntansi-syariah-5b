@@ -600,7 +600,7 @@ requestAnimationFrame(loop);
 })();
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r160/three.min.js"><\/script>
+<script src="https://unpkg.com/three@0.160.0/build/three.min.js"><\/script>
 <script>
 (()=> {
 "use strict";
@@ -629,9 +629,22 @@ function carMesh(color="#d74343"){
   const lamp=box(.12,.14,.25,"#ffe6a0");lamp.position.set(1.42,.72,-.42);g.add(lamp);
   return g;
 }
-function init3D(){
-  if(threeStarted||!window.THREE)return;
-  threeStarted=true;overlay.style.display="flex";overlay.textContent="Membangun kota 3D...";
+async function init3D(){
+  if(threeStarted)return;
+  threeStarted=true;
+  if(!window.THREE){
+    overlay.style.display="flex";
+    overlay.textContent="Menghubungkan engine 3D...";
+    try{
+      const mod=await import("https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js");
+      window.THREE=mod;
+    }catch(err){
+      threeStarted=false;
+      overlay.style.display="none";
+      showHint("⚠️ Engine 3D belum termuat. Coba refresh halaman.");
+      return;
+    }
+  }overlay.style.display="flex";overlay.textContent="Membangun kota 3D...";
   oldCanvas.style.display="none";mini.style.display="none";
   scene=new THREE.Scene();scene.background=new THREE.Color("#79a8d0");
   camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,3000);
@@ -681,7 +694,7 @@ function render3D(t){
   renderer.render(scene,camera);
   requestAnimationFrame(render3D);
 }
-startBtn.addEventListener("click",()=>setTimeout(init3D,50));
+startBtn.addEventListener("click",()=>setTimeout(()=>init3D(),100));
 })();
 </script>
 </body>
