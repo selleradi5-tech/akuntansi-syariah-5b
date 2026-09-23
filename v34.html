@@ -146,9 +146,9 @@ function syncDrive(){
   if(!driveGas&&!driveLeft&&!driveRight)document.getElementById("stick").style.transform="translate(0,0)";
 }
 function bindDrive(id,key){
-  const el=document.getElementById(id); if(!el)return;
-  const down=e=>{e.preventDefault();window[key]=true;syncDrive()};
-  const up=e=>{e.preventDefault();window[key]=false;syncDrive()};
+  const el=document.getElementById(id);if(!el)return;
+  const set=v=>{if(key==="driveGas")driveGas=v;else if(key==="driveLeft")driveLeft=v;else if(key==="driveRight")driveRight=v;syncDrive()};
+  const down=e=>{e.preventDefault();set(true)};const up=e=>{e.preventDefault();set(false)};
   el.addEventListener("pointerdown",down);el.addEventListener("pointerup",up);el.addEventListener("pointercancel",up);el.addEventListener("pointerleave",up);
   el.addEventListener("touchstart",down,{passive:false});el.addEventListener("touchend",up,{passive:false});el.addEventListener("touchcancel",up,{passive:false});
 }
