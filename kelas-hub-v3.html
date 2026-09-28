@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KELAS.HUB V3 - Akuntansi Syariah 5B</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#70798b;--line:#e5e8ef;--p:#3157d5;--p2:#203b9d;--soft:#edf1ff;--green:#16835b;--red:#c44242;--amber:#a96c00;--shadow:0 10px 30px #1a27500d}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}button{cursor:pointer;border:0}.hidden{display:none!important}
+.login{min-height:100vh;display:grid;place-items:center;padding:24px;background:linear-gradient(135deg,#eef2ff,#f8faff)}
+.login-card{width:min(430px,100%);background:white;border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:0 24px 70px #17255d16}
+.logo{display:flex;align-items:center;gap:12px;font-weight:900;font-size:22px}.logo-icon{width:44px;height:44px;border-radius:13px;background:var(--p);color:white;display:grid;place-items:center}
+h1,h2,h3,p{margin-top:0}.muted{color:var(--muted)}.field{margin:14px 0}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:7px}.field input,.field select,.field textarea{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:11px;outline:none;background:white}.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--p)}
+.btn{padding:11px 15px;border-radius:11px;background:var(--p);color:#fff;font-weight:800}.btn:hover{background:var(--p2)}.btn.light{background:var(--soft);color:var(--p)}.btn.green{background:var(--green)}.btn.red{background:#fff0f0;color:var(--red)}.btn.sm{padding:8px 10px;font-size:12px}
+.demo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.demo button{padding:10px;border:1px solid var(--line);border-radius:11px;background:#fff;text-align:left}.demo b{display:block;font-size:12px}.demo span{font-size:11px;color:var(--muted)}
+.app{min-height:100vh}.top{height:68px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:5}.user{display:flex;align-items:center;gap:10px}.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--p);font-weight:900}
+.layout{display:grid;grid-template-columns:235px 1fr;min-height:calc(100vh - 68px)}.side{background:#fff;border-right:1px solid var(--line);padding:18px 12px}.nav{display:grid;gap:5px}.nav button{background:transparent;text-align:left;padding:11px 13px;border-radius:10px;color:#5d6678;font-weight:700}.nav button.active,.nav button:hover{background:var(--soft);color:var(--p)}.nav .admin-link{color:#7a4f00}.content{padding:28px;max-width:1250px;width:100%;margin:auto}.page{display:none}.page.active{display:block}.hero{background:linear-gradient(120deg,#3157d5,#243f9f);color:white;border-radius:20px;padding:24px;display:flex;justify-content:space-between;gap:20px;align-items:center;margin-bottom:20px}.hero h1{margin-bottom:7px}.hero p{opacity:.85;margin-bottom:0}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}.stat,.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}.stat{padding:17px}.stat .num{font-size:27px;font-weight:900;margin-top:7px}.stat small{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.card{padding:18px}.card h3{font-size:15px}.list{display:grid;gap:10px}.item{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fff}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.tag{display:inline-flex;padding:5px 8px;border-radius:8px;background:var(--soft);color:var(--p);font-size:11px;font-weight:800}.tag.green{background:#e9f8f1;color:var(--green)}.tag.red{background:#fff0f0;color:var(--red)}.tag.amber{background:#fff6df;color:var(--amber)}
+.toolbar{display:flex;gap:10px;justify-content:space-between;align-items:center;margin-bottom:15px}.toolbar input{width:280px;max-width:55%;padding:11px;border:1px solid var(--line);border-radius:10px}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:12px;border-bottom:1px solid var(--line);font-size:13px}.table th{color:var(--muted);font-size:11px;text-transform:uppercase}.empty{text-align:center;padding:30px;color:var(--muted)}
+.progress{height:8px;background:#edf0f5;border-radius:99px;overflow:hidden}.progress i{display:block;height:100%;background:var(--p);border-radius:99px}.notice{padding:12px;border-radius:12px;background:#fff8e8;border:1px solid #f4dfaa;color:#765200;font-size:13px}
+.modal-bg{position:fixed;inset:0;background:#0c142c80;display:none;place-items:center;padding:20px;z-index:20}.modal{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:22px}.modal-bg.show{display:grid}.modal-head{display:flex;justify-content:space-between;align-items:center}.x{background:#f1f3f7;border-radius:8px;padding:7px 10px}.actions{display:flex;justify-content:flex-end;gap:9px;margin-top:18px}
+.mobile-nav{display:none}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.side{display:none}.content{padding:18px}.stats{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);z-index:10;justify-content:space-around;padding:7px}.mobile-nav button{background:none;font-size:10px;color:var(--muted)}.mobile-nav button.active{color:var(--p);font-weight:900}.top{padding:0 15px}.hero{padding:19px}.table{min-width:650px}.table-wrap{overflow:auto}.toolbar{align-items:stretch;flex-direction:column}.toolbar input{max-width:100%;width:100%}}
+</style>
+</head>
+<body>
+
+<section id="login" class="login">
+  <div class="login-card">
+    <div class="logo"><div class="logo-icon">K</div><div>KELAS.HUB <span style="color:#3157d5">V3</span></div></div>
+    <p class="muted" style="margin:18px 0 22px">Portal digital kelas Akuntansi Syariah 5B.</p>
+    <div class="field"><label>NIM / Username</label><input id="loginUser" placeholder="Contoh: 2482130054"></div>
+    <div class="field"><label>Password</label><input id="loginPass" type="password" placeholder="Password"></div>
+    <button class="btn" style="width:100%" onclick="login()">Masuk ke Kelas</button>
+    <div class="demo">
+      <button onclick="demo('student')"><b>Demo Mahasiswa</b><span>2482130054 / demo</span></button>
+      <button onclick="demo('admin')"><b>Demo Admin</b><span>admin / admin</span></button>
+    </div>
+    <p id="loginMsg" style="color:#c44242;font-size:12px;margin-top:13px"></p>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+<header class="top">
+  <div class="logo" style="font-size:18px"><div class="logo-icon" style="width:36px;height:36px;border-radius:10px">K</div>KELAS.HUB</div>
+  <div class="user"><div><b id="userName">Faik Auladi</b><div id="userRole" class="muted" style="font-size:11px">Mahasiswa</div></div><div class="avatar" id="avatar">FA</div></div>
+</header>
+<div class="layout">
+<aside class="side">
+  <nav class="nav">
+    <button data-page="home" onclick="go('home')">⌂ Dashboard</button>
+    <button data-page="courses" onclick="go('courses')">▦ Mata Kuliah</button>
+    <button data-page="schedule" onclick="go('schedule')">◷ Jadwal</button>
+    <button data-page="tasks" onclick="go('tasks')">✓ Tugas</button>
+    <button data-page="materials" onclick="go('materials')">▤ Materi</button>
+    <button data-page="attendance" onclick="go('attendance')">◉ Absensi</button>
+    <button data-page="grades" onclick="go('grades')">★ Nilai</button>
+    <button data-page="students" onclick="go('students')">♙ Mahasiswa</button>
+    <button data-page="announcements" onclick="go('announcements')">! Pengumuman</button>
+    <button data-page="admin" class="admin-link hidden" id="adminNav" onclick="go('admin')">⚙ Admin Kelas</button>
+    <button onclick="logout()">↪ Keluar</button>
+  </nav>
+</aside>
+<main class="content">
+<section id="home" class="page">
+  <div class="hero"><div><h1>Halo, <span id="helloName">Faik</span> 👋</h1><p>Selamat datang di ruang kelas digital Akuntansi Syariah 5B.</p></div><button class="btn light" onclick="go('tasks')">Lihat Tugas</button></div>
+  <div class="stats" id="stats"></div>
+  <div class="grid">
+    <div class="card"><div class="row"><h3>Tugas Terdekat</h3><button class="btn sm light" onclick="go('tasks')">Semua</button></div><div id="dashTasks" class="list"></div></div>
+    <div class="card"><div class="row"><h3>Pengumuman</h3><button class="btn sm light" onclick="go('announcements')">Semua</button></div><div id="dashNews" class="list"></div></div>
+    <div class="card"><h3>Kehadiran</h3><p class="muted" style="font-size:12px">Rekap semester berjalan</p><div style="font-size:32px;font-weight:900" id="attPct">80%</div><div class="progress"><i id="attBar" style="width:80%"></i></div><p class="muted" style="font-size:12px;margin-top:9px" id="attText">8 hadir dari 10 pertemuan</p></div>
+  </div>
+</section>
+
+<section id="courses" class="page"><div class="toolbar"><div><h2>Mata Kuliah</h2><p class="muted">Daftar mata kuliah semester ini.</p></div></div><div id="courseList" class="grid"></div></section>
+<section id="schedule" class="page"><div class="toolbar"><div><h2>Jadwal Kuliah</h2><p class="muted">Jadwal kelas Akuntansi Syariah 5B.</p></div></div><div class="card table-wrap"><table class="table"><thead><tr><th>Hari</th><th>Jam</th><th>Mata Kuliah</th><th>Dosen</th><th>Ruang</th></tr></thead><tbody id="scheduleBody"></tbody></table></div></section>
+
+<section id="tasks" class="page"><div class="toolbar"><div><h2>Tugas</h2><p class="muted">Pantau deadline dan status pengumpulan.</p></div><input id="taskSearch" oninput="renderTasks()" placeholder="Cari tugas..."></div><div id="taskList" class="list"></div></section>
+
+<section id="materials" class="page"><div class="toolbar"><div><h2>Materi</h2><p class="muted">Materi perkuliahan tersimpan di kelas.</p></div><input id="materialSearch" oninput="renderMaterials()" placeholder="Cari materi..."></div><div id="materialList" class="grid"></div></section>
+
+<section id="attendance" class="page"><div class="toolbar"><div><h2>Absensi</h2><p class="muted">Catat kehadiran untuk pertemuan yang sedang dibuka.</p></div></div><div id="attendanceList" class="list"></div><div class="card" style="margin-top:15px"><h3>Rekap Kehadiran</h3><div id="attendanceHistory"></div></div></section>
+
+<section id="grades" class="page"><div class="toolbar"><div><h2>Nilai</h2><p class="muted">Rekap nilai yang sudah tersedia.</p></div></div><div class="card table-wrap"><table class="table"><thead><tr><th>Mata Kuliah</th><th>Tugas</th><th>UTS</th><th>UAS</th><th>Nilai Akhir</th><th>Huruf</th></tr></thead><tbody id="gradeBody"></tbody></table></div></section>
+
+<section id="students" class="page"><div class="toolbar"><div><h2>Mahasiswa</h2><p class="muted">Daftar anggota kelas.</p></div><input id="studentSearch" oninput="renderStudents()" placeholder="Cari nama / NIM..."></div><div class="card table-wrap"><table class="table"><thead><tr><th>No</th><th>Nama</th><th>NIM</th><th>Status</th></tr></thead><tbody id="studentBody"></tbody></table></div></section>
+
+<section id="announcements" class="page"><div class="toolbar"><div><h2>Pengumuman</h2><p class="muted">Informasi terbaru kelas.</p></div></div><div id="newsList" class="list"></div></section>
+
+<section id="admin" class="page"><div class="hero"><div><h1>Admin Kelas</h1><p>Kelola konten portal kelas dari satu tempat.</p></div></div><div class="stats" id="adminStats"></div><div class="grid">
+<div class="card"><h3>Tambah Pengumuman</h3><p class="muted">Publikasikan informasi untuk seluruh kelas.</p><button class="btn" onclick="openModal('news')">Tambah</button></div>
+<div class="card"><h3>Tambah Tugas</h3><p class="muted">Buat tugas dan deadline baru.</p><button class="btn" onclick="openModal('task')">Tambah</button></div>
+<div class="card"><h3>Tambah Materi</h3><p class="muted">Masukkan materi baru ke portal.</p><button class="btn" onclick="openModal('material')">Tambah</button></div>
+<div class="card"><h3>Tambah Jadwal</h3><p class="muted">Atur jadwal kuliah.</p><button class="btn" onclick="openModal('schedule')">Tambah</button></div>
+<div class="card"><h3>Data tersimpan</h3><p class="muted">V3 menggunakan localStorage. Data tetap ada setelah refresh pada perangkat ini.</p><button class="btn light" onclick="resetData()">Reset Data Demo</button></div>
+</div></section>
+</main></div>
+<div class="mobile-nav">
+<button onclick="go('home')">⌂<br>Home</button><button onclick="go('tasks')">✓<br>Tugas</button><button onclick="go('materials')">▤<br>Materi</button><button onclick="go('attendance')">◉<br>Absen</button><button onclick="go('admin')">⚙<br>Admin</button>
+</div>
+</div>
+
+<div id="modalBg" class="modal-bg"><div class="modal"><div class="modal-head"><h3 id="modalTitle">Tambah</h3><button class="x" onclick="closeModal()">✕</button></div><div id="modalBody"></div></div></div>
+
+<script>
+const KEY='kelasHubV3Data';
+let role='student', currentUser='Faik Auladi';
+const initial={
+courses:[
+{name:'Akuntansi Sektor Publik',code:'ASP',lecturer:'Ibu Ade Febry Nurfitriani, M.Ak.',room:'R. 201'},
+{name:'Perpajakan 2',code:'PJK2',lecturer:'Dosen Perpajakan',room:'R. 202'},
+{name:'Akuntansi Lanjutan',code:'AL',lecturer:'Dosen Akuntansi',room:'R. 203'},
+{name:'Auditing 2',code:'AUD2',lecturer:'Dosen Auditing',room:'R. 204'},
+{name:'Metodologi Penelitian',code:'METPEN',lecturer:'Dosen Metodologi',room:'R. 205'}],
+schedule:[
+{day:'Senin',time:'08.00–09.40',course:'Akuntansi Sektor Publik',lecturer:'Ibu Ade Febry Nurfitriani',room:'R. 201'},
+{day:'Selasa',time:'10.00–11.40',course:'Perpajakan 2',lecturer:'Dosen Perpajakan',room:'R. 202'},
+{day:'Rabu',time:'08.00–09.40',course:'Akuntansi Lanjutan',lecturer:'Dosen Akuntansi',room:'R. 203'},
+{day:'Kamis',time:'13.00–14.40',course:'Auditing 2',lecturer:'Dosen Auditing',room:'R. 204'},
+{day:'Jumat',time:'09.00–10.40',course:'Metodologi Penelitian',lecturer:'Dosen Metodologi',room:'R. 205'}],
+tasks:[
+{id:1,title:'Makalah Audit Sektor Publik',course:'Auditing 2',due:'2026-09-30',status:'Belum dikumpulkan'},
+{id:2,title:'Analisis PPh Pasal 24',course:'Perpajakan 2',due:'2026-10-02',status:'Belum dikumpulkan'},
+{id:3,title:'Ringkasan Bab 2 ASP',course:'Akuntansi Sektor Publik',due:'2026-10-05',status:'Belum dikumpulkan'}],
+materials:[
+{id:1,title:'Bab 2 Pengertian Akuntansi Sektor Publik',course:'Akuntansi Sektor Publik',type:'PDF'},
+{id:2,title:'PPh 24 dan Kredit Pajak Luar Negeri',course:'Perpajakan 2',type:'PDF'},
+{id:3,title:'Pengukuran Goodwill dan NCI',course:'Akuntansi Lanjutan',type:'Materi'}],
+news:[
+{id:1,title:'Pengumpulan tugas Audit',body:'Jangan lupa cek format dan deadline sebelum mengunggah tugas.',date:'28 Sep 2026'},
+{id:2,title:'Materi pertemuan terbaru tersedia',body:'Materi ASP sudah ditambahkan ke menu Materi.',date:'27 Sep 2026'}],
+students:[
+{name:'Faik Auladi',nim:'2482130054',status:'Aktif'},
+{name:'Mahasiswa 02',nim:'2482130002',status:'Aktif'},
+{name:'Mahasiswa 03',nim:'2482130003',status:'Aktif'},
+{name:'Mahasiswa 04',nim:'2482130004',status:'Aktif'},
+{name:'Mahasiswa 05',nim:'2482130005',status:'Aktif'},
+{name:'Mahasiswa 06',nim:'2482130006',status:'Aktif'},
+{name:'Mahasiswa 07',nim:'2482130007',status:'Aktif'},
+{name:'Mahasiswa 08',nim:'2482130008',status:'Aktif'}],
+grades:[
+{course:'Akuntansi Sektor Publik',task:88,uts:84,uas:86,final:86,letter:'A'},
+{course:'Perpajakan 2',task:82,uts:80,uas:84,final:82,letter:'A-'},
+{course:'Akuntansi Lanjutan',task:86,uts:78,uas:82,final:82,letter:'A-'},
+{course:'Auditing 2',task:90,uts:85,uas:88,final:88,letter:'A'},
+{course:'Metodologi Penelitian',task:84,uts:80,uas:85,final:83,letter:'A-'}],
+attendance:{total:10,present:8,records:[
+{course:'Akuntansi Sektor Publik',date:'28 Sep 2026',status:'Belum dibuka'},
+{course:'Perpajakan 2',date:'29 Sep 2026',status:'Belum dibuka'},
+{course:'Auditing 2',date:'30 Sep 2026',status:'Hadir'}]}
+};
+function data(){let d=localStorage.getItem(KEY);if(!d){localStorage.setItem(KEY,JSON.stringify(initial));return structuredClone(initial)}return JSON.parse(d)}
+function save(d){localStorage.setItem(KEY,JSON.stringify(d))}
+let D=data();
+
+function demo(r){document.getElementById('loginUser').value=r==='admin'?'admin':'2482130054';document.getElementById('loginPass').value=r==='admin'?'admin':'demo';login()}
+function login(){
+ const u=document.getElementById('loginUser').value.trim(), p=document.getElementById('loginPass').value;
+ if((u==='admin'&&p==='admin')||(u==='2482130054'&&p==='demo')){
+ role=u==='admin'?'admin':'student';currentUser=role==='admin'?'Admin Kelas':'Faik Auladi';
+ document.getElementById('login').classList.add('hidden');document.getElementById('app').classList.remove('hidden');
+ document.getElementById('adminNav').classList.toggle('hidden',role!=='admin');
+ document.getElementById('userName').textContent=currentUser;document.getElementById('userRole').textContent=role==='admin'?'Administrator':'Mahasiswa • Akuntansi Syariah 5B';
+ document.getElementById('avatar').textContent=role==='admin'?'AD':'FA';document.getElementById('helloName').textContent=role==='admin'?'Admin':currentUser.split(' ')[0];
+ renderAll();go('home');
+ }else document.getElementById('loginMsg').textContent='Username atau password salah. Gunakan tombol demo untuk mencoba.';
+}
+function logout(){document.getElementById('app').classList.add('hidden');document.getElementById('login').classList.remove('hidden')}
+function go(page){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));document.getElementById(page)?.classList.add('active');document.querySelectorAll('.nav button[data-page]').forEach(x=>x.classList.toggle('active',x.dataset.page===page))}
+function renderAll(){D=data();renderStats();renderTasks();renderMaterials();renderCourses();renderSchedule();renderAttendance();renderGrades();renderStudents();renderNews();renderAdmin()}
+function renderStats(){
+ let avg=Math.round(D.grades.reduce((a,b)=>a+b.final,0)/D.grades.length), pending=D.tasks.filter(x=>x.status!=='Dikumpulkan').length;
+ document.getElementById('stats').innerHTML=`<div class="stat"><small>Mata Kuliah</small><div class="num">${D.courses.length}</div></div><div class="stat"><small>Tugas Belum Selesai</small><div class="num">${pending}</div></div><div class="stat"><small>Rata-rata Nilai</small><div class="num">${avg}</div></div><div class="stat"><small>Materi Tersedia</small><div class="num">${D.materials.length}</div></div>`;
+ let p=Math.round(D.attendance.present/D.attendance.total*100);document.getElementById('attPct').textContent=p+'%';document.getElementById('attBar').style.width=p+'%';document.getElementById('attText').textContent=`${D.attendance.present} hadir dari ${D.attendance.total} pertemuan`;
+ document.getElementById('dashTasks').innerHTML=D.tasks.slice(0,3).map(t=>`<div class="item"><div class="row"><b>${t.title}</b><span class="tag ${t.status==='Dikumpulkan'?'green':'amber'}">${t.status}</span></div><small class="muted">${t.course} • ${fmt(t.due)}</small></div>`).join('');
+ document.getElementById('dashNews').innerHTML=D.news.slice(0,3).map(n=>`<div class="item"><b>${n.title}</b><div class="muted" style="font-size:12px;margin-top:4px">${n.date}</div></div>`).join('');
+}
+function fmt(s){let d=new Date(s+'T00:00:00');return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}
+function renderTasks(){let q=(document.getElementById('taskSearch')?.value||'').toLowerCase();let arr=D.tasks.filter(t=>(t.title+t.course).toLowerCase().includes(q));document.getElementById('taskList').innerHTML=arr.map(t=>`<div class="card"><div class="row"><div><span class="tag">${t.course}</span><h3 style="margin:10px 0 5px">${t.title}</h3><div class="muted">Deadline: <b>${fmt(t.due)}</b></div></div><span class="tag ${t.status==='Dikumpulkan'?'green':'amber'}">${t.status}</span></div><div style="margin-top:14px"><button class="btn sm ${t.status==='Dikumpulkan'?'light':''}" onclick="submitTask(${t.id})">${t.status==='Dikumpulkan'?'Lihat Pengumpulan':'Kumpulkan Tugas'}</button></div></div>`).join('')||'<div class="empty">Tugas tidak ditemukan.</div>'}
+function submitTask(id){let t=D.tasks.find(x=>x.id===id);openCustom('Kumpulkan Tugas',`<div class="field"><label>File tugas</label><input id="fileTask" type="file"></div><div class="field"><label>Catatan</label><textarea id="noteTask" rows="3" placeholder="Catatan untuk dosen..."></textarea></div><div class="notice">Prototype V3 menyimpan nama file dan status pengumpulan di browser ini.</div><div class="actions"><button class="btn light" onclick="closeModal()">Batal</button><button class="btn" onclick="saveSubmission(${id})">Kirim</button></div>`)}
+function saveSubmission(id){let f=document.getElementById('fileTask').files[0];let t=D.tasks.find(x=>x.id===id);t.status='Dikumpulkan';t.file=f?f.name:'Pengumpulan tanpa file';save(D);closeModal();renderAll();alert('Pengumpulan berhasil dicatat di perangkat ini.')}
+function renderMaterials(){let q=(document.getElementById('materialSearch')?.value||'').toLowerCase();let arr=D.materials.filter(m=>(m.title+m.course+m.type).toLowerCase().includes(q));document.getElementById('materialList').innerHTML=arr.map(m=>`<div class="card"><span class="tag">${m.type}</span><h3 style="margin:11px 0 5px">${m.title}</h3><p class="muted" style="font-size:12px">${m.course}</p><button class="btn light sm" onclick="alert('Pada versi online, tombol ini dapat diarahkan ke file materi.')">Buka Materi</button></div>`).join('')||'<div class="empty">Materi tidak ditemukan.</div>'}
+function renderCourses(){document.getElementById('courseList').innerHTML=D.courses.map(c=>`<div class="card"><span class="tag">${c.code}</span><h3 style="margin:11px 0 5px">${c.name}</h3><p class="muted" style="font-size:12px">${c.lecturer}</p><div class="notice">${c.room}</div></div>`).join('')}
+function renderSchedule(){document.getElementById('scheduleBody').innerHTML=D.schedule.map(s=>`<tr><td><b>${s.day}</b></td><td>${s.time}</td><td>${s.course}</td><td>${s.lecturer}</td><td>${s.room}</td></tr>`).join('')}
+function renderAttendance(){document.getElementById('attendanceList').innerHTML=D.attendance.records.map((r,i)=>`<div class="card"><div class="row"><div><span class="tag">${r.course}</span><h3 style="margin:8px 0 4px">${r.date}</h3><span class="muted" style="font-size:12px">Status: ${r.status}</span></div>${r.status==='Belum dibuka'?'<button class="btn sm" onclick="markPresent('+i+')">Hadir</button>':`<span class="tag ${r.status==='Hadir'?'green':'amber'}">${r.status}</span>`}</div></div>`).join('');document.getElementById('attendanceHistory').innerHTML=`<div class="row"><b>Kehadiran semester</b><b>${D.attendance.present}/${D.attendance.total}</b></div><div class="progress" style="margin-top:9px"><i style="width:${D.attendance.present/D.attendance.total*100}%"></i></div>`}
+function markPresent(i){D.attendance.records[i].status='Hadir';D.attendance.present=Math.min(D.attendance.total,D.attendance.present+1);save(D);renderAll();alert('Kehadiran berhasil dicatat.')}
+function renderGrades(){document.getElementById('gradeBody').innerHTML=D.grades.map(g=>`<tr><td>${g.course}</td><td>${g.task}</td><td>${g.uts}</td><td>${g.uas}</td><td><b>${g.final}</b></td><td><span class="tag green">${g.letter}</span></td></tr>`).join('')}
+function renderStudents(){let q=(document.getElementById('studentSearch')?.value||'').toLowerCase();let arr=D.students.filter(s=>(s.name+s.nim).toLowerCase().includes(q));document.getElementById('studentBody').innerHTML=arr.map((s,i)=>`<tr><td>${i+1}</td><td><b>${s.name}</b></td><td>${s.nim}</td><td><span class="tag green">${s.status}</span></td></tr>`).join('')}
+function renderNews(){document.getElementById('newsList').innerHTML=D.news.map(n=>`<div class="card"><div class="row"><h3>${n.title}</h3><span class="tag">${n.date}</span></div><p class="muted">${n.body}</p></div>`).join('')}
+function renderAdmin(){document.getElementById('adminStats').innerHTML=`<div class="stat"><small>Mahasiswa</small><div class="num">${D.students.length}</div></div><div class="stat"><small>Tugas</small><div class="num">${D.tasks.length}</div></div><div class="stat"><small>Materi</small><div class="num">${D.materials.length}</div></div><div class="stat"><small>Pengumuman</small><div class="num">${D.news.length}</div></div>`}
+function openModal(type){
+ let title={news:'Tambah Pengumuman',task:'Tambah Tugas',material:'Tambah Materi',schedule:'Tambah Jadwal'}[type];
+ let body='';
+ if(type==='news')body=`<div class="field"><label>Judul</label><input id="f1"></div><div class="field"><label>Isi</label><textarea id="f2" rows="4"></textarea></div>`;
+ if(type==='task')body=`<div class="field"><label>Judul Tugas</label><input id="f1"></div><div class="field"><label>Mata Kuliah</label><select id="f2">${D.courses.map(c=>`<option>${c.name}</option>`).join('')}</select></div><div class="field"><label>Deadline</label><input id="f3" type="date"></div>`;
+ if(type==='material')body=`<div class="field"><label>Judul Materi</label><input id="f1"></div><div class="field"><label>Mata Kuliah</label><select id="f2">${D.courses.map(c=>`<option>${c.name}</option>`).join('')}</select></div><div class="field"><label>Tipe</label><select id="f3"><option>PDF</option><option>Materi</option><option>Link</option></select></div>`;
+ if(type==='schedule')body=`<div class="field"><label>Hari</label><select id="f1">${['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'].map(x=>`<option>${x}</option>`).join('')}</select></div><div class="field"><label>Jam</label><input id="f2" placeholder="08.00–09.40"></div><div class="field"><label>Mata Kuliah</label><select id="f3">${D.courses.map(c=>`<option>${c.name}</option>`).join('')}</select></div><div class="field"><label>Dosen</label><input id="f4"></div><div class="field"><label>Ruang</label><input id="f5" placeholder="R. 201"></div>`;
+ body+=`<div class="actions"><button class="btn light" onclick="closeModal()">Batal</button><button class="btn" onclick="saveAdmin('${type}')">Simpan</button></div>`;openCustom(title,body)}
+function saveAdmin(type){
+ if(type==='news')D.news.unshift({id:Date.now(),title:f('f1'),body:f('f2'),date:new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})});
+ if(type==='task')D.tasks.unshift({id:Date.now(),title:f('f1'),course:f('f2'),due:f('f3'),status:'Belum dikumpulkan'});
+ if(type==='material')D.materials.unshift({id:Date.now(),title:f('f1'),course:f('f2'),type:f('f3')});
+ if(type==='schedule')D.schedule.push({day:f('f1'),time:f('f2'),course:f('f3'),lecturer:f('f4'),room:f('f5')});
+ save(D);closeModal();renderAll();alert('Data berhasil ditambahkan.')}
+function f(id){return document.getElementById(id).value.trim()}
+function openCustom(title,body){document.getElementById('modalTitle').textContent=title;document.getElementById('modalBody').innerHTML=body;document.getElementById('modalBg').classList.add('show')}
+function closeModal(){document.getElementById('modalBg').classList.remove('show')}
+function resetData(){if(confirm('Reset semua data demo ke kondisi awal?')){localStorage.removeItem(KEY);D=data();renderAll();alert('Data demo direset.')}}
+renderAll();
+</script>
+</body>
+</html>
